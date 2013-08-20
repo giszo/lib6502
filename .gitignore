@@ -1,0 +1,4 @@
+*.os
+
+/lib6502.so
+/.sconsign.dblite
