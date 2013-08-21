@@ -8,6 +8,25 @@
 
 #define READ_AT(addr) Fixture::MemoryAccess(Fixture::Read, addr)
 
+/**
+ * Prepares the status register of the CPU.
+ *
+ * The mask 'set' will be set in the status register and the 'not_set' mask will be cleared.
+ */
+#define PREPARE_FLAGS(status, set, not_set) \
+    status |= (set); \
+    status &= ~(not_set);
+
+/**
+ * Checks the status register of the CPU.
+ *
+ * The mask 'set' will be checked whether it is set in the status register and 'not_set' will be checked whether those
+ * bits are not set.
+ */
+#define CHECK_FLAGS(status, set, not_set) \
+    BOOST_CHECK_EQUAL(status & (set), set); \
+    BOOST_CHECK_EQUAL(status & (not_set), 0);
+
 struct Fixture : public lib6502::Memory
 {
     Fixture();

@@ -3,10 +3,13 @@
 #include <iostream>
 #include <iomanip>
 
+#include <string.h>
+
 // =====================================================================================================================
 Fixture::Fixture()
 {
     m_ram = new uint8_t[64 * 1024 /* 64kB */];
+    memset(m_ram, 0x00, 64 * 1024);
 
     // setup RESET vector to 0x8000
     m_ram[0xfffc] = 0x00;

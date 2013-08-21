@@ -3,15 +3,21 @@
 
 #include <iomanip>
 
-#define m_A m_state.m_A
-#define m_X m_state.m_X
-#define m_Y m_state.m_Y
-#define m_status m_state.m_status
-#define m_SP m_state.m_SP
-#define m_PC m_state.m_PC
-#define m_inInterrupt m_state.m_inInterrupt
-
 using namespace lib6502;
+
+// =====================================================================================================================
+Cpu::State::State()
+    : m_A(0),
+      m_X(0),
+      m_Y(0),
+      m_status(0),
+      m_SP(0),
+      m_PC(0),
+      m_inInterrupt(false)
+{
+}
+
+#include "statemacros.h"
 
 // =====================================================================================================================
 Cpu::Cpu(Memory& memory)
@@ -100,8 +106,12 @@ void Cpu::buildInstructionTable()
     INSTR(0x05, oraZero);
     INSTR(0x09, oraImm);
     INSTR(0x0a, aslAcc);
+    INSTR(0x0d, oraAbs);
     INSTR(0x10, bpl);
+    INSTR(0x15, oraZeroX);
     INSTR(0x18, clc);
+    INSTR(0x19, oraAbsY);
+    INSTR(0x1d, oraAbsX);
     INSTR(0x20, jsrAbs);
     INSTR(0x24, bitZero);
     INSTR(0x26, rolZero);
@@ -651,26 +661,6 @@ void Cpu::styAbs()
     uint16_t abs = read16();
     traceInstruction(MakeString() << "STY $" << std::hex << std::setw(4) << std::setfill('0') << abs);
     m_memory.write(abs, m_Y);
-}
-
-// =====================================================================================================================
-void Cpu::oraImm()
-{
-    uint8_t imm = read8();
-    m_A |= imm;
-    updateZero(m_A);
-    updateSign(m_A);
-    traceInstruction(MakeString() << "ORA #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-}
-
-// =====================================================================================================================
-void Cpu::oraZero()
-{
-    uint16_t addr = read8();
-    m_A |= m_memory.read(addr);
-    updateZero(m_A);
-    updateSign(m_A);
-    traceInstruction(MakeString() << "ORA $" << std::hex << std::setw(2) << std::setfill('0') << addr);
 }
 
 // =====================================================================================================================

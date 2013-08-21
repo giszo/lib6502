@@ -34,6 +34,8 @@ class Cpu
 	// structure representing the internal state of the 6502 CPU
 	struct State
 	{
+	    State();
+
 	    uint8_t m_A;
 	    uint8_t m_X;
 	    uint8_t m_Y;
@@ -150,6 +152,11 @@ class Cpu
 
 	void oraImm();
 	void oraZero();
+	void oraZeroX();
+	void oraAbs();
+	void oraAbsX();
+	void oraAbsY();
+
 	void eorImm();
 	void eorZero();
 	void andImm();
