@@ -70,7 +70,7 @@ void Cpu::ldaAbsY()
 void Cpu::ldaIndY()
 {
     uint8_t off = read8();
-    traceInstruction(MakeString() << "LDA ($" << std::hex << std::setw(2) << std::setfill('0') << off << "),Y");
+    traceInstruction(MakeString() << "LDA ($" << std::hex << std::setw(2) << std::setfill('0') << (int)off << "),Y");
 
     uint16_t addr = (m_memory.read(off) | (m_memory.read(off + 1) << 8)) + m_Y;
     m_A = m_memory.read(addr);
