@@ -28,10 +28,19 @@ class CpuException : public std::runtime_error
 	{}
 };
 
+/**
+ * Main class for the MOS 6502 processor.
+ *
+ * Instructions are implemented according to the following documents:
+ *   - http://www.6502.org/tutorials/6502opcodes.html
+ *   - http://www.obelisk.demon.co.uk/6502/reference.html
+ */
 class Cpu
 {
     public:
 	Cpu(Memory& memory);
+
+	bool isInInterrupt() const;
 
 	void setInstructionTracer(InstructionTracer* t);
 
@@ -44,6 +53,8 @@ class Cpu
 	 * Performs a reset on the CPU.
 	 */
 	void reset();
+
+	void nmi();
 
 	void dumpState(std::ostream& s);
 
@@ -70,37 +81,79 @@ class Cpu
 	void bpl();
 	void bcs();
 	void bne();
+	void beq();
+	void bcc();
+	void bmi();
 
 	void jmpAbs();
+	void jmpInd();
 	void jsrAbs();
 	void rts();
+	void rti();
 
 	void sei();
 	void cld();
+	void sec();
+	void clc();
 
 	void txs();
 	void txa();
+	void tax();
+	void tya();
+	void tay();
 
+	void pha();
+	void pla();
+
+	void incZero();
 	void incAbs();
+	void decZero();
+	void decAbs();
+	void decAbsX();
 
+	void inx();
 	void dex();
 	void ldxImm();
+	void ldxZero();
+	void ldxAbs();
+	void ldxAbsY();
+	void stxZero();
+	void stxAbs();
 
 	void iny();
 	void dey();
 	void ldyImm();
+	void ldyZero();
+	void ldyAbs();
+	void ldyAbsX();
+	void styZero();
+	void styAbs();
 
 	void oraImm();
+	void oraZero();
+	void eorImm();
+	void eorZero();
 	void andImm();
+	void andAbsX();
 
 	void ldaImm();
+	void ldaZero();
 	void ldaAbs();
 	void ldaAbsX();
+	void ldaAbsY();
+	void ldaIndY();
 
-	void stxZero();
+	void adcImm();
+	void adcZero();
+	void adcAbs();
+	void adcAbsY();
+
+	void sbcImm();
+	void sbcAbsY();
 
 	void staZero();
 	void staAbs();
+	void staAbsX();
 	void staAbsY();
 	void staIndY();
 
@@ -109,8 +162,22 @@ class Cpu
 	void cpyImm();
 
 	void cmpImm();
+	void cmpZero();
+	void cmpAbs();
+	void cmpAbsY();
 
+	void bitZero();
 	void bitAbs();
+
+	void aslAcc();
+	void lsrAcc();
+	void lsrZero();
+	void lsrAbs();
+	void rolAcc();
+	void rolZero();
+	void rolAbs();
+	void rorAcc();
+	void rorAbsX();
 
     private:
 	enum Flags
@@ -130,6 +197,8 @@ class Cpu
 	uint8_t m_status;
 	uint8_t m_SP;
 	uint16_t m_PC;
+
+	bool m_inInterrupt;
 
 	Memory& m_memory;
 
