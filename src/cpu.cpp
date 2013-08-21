@@ -949,7 +949,7 @@ void Cpu::bitZero()
 
     uint8_t data = m_memory.read(addr);
     setOrClearStatus(SIGN, ((data >> 7) & 1) == 1);
-    setOrClearStatus(OVERFLOW, ((data >> 6) & 1) == 1);
+    setOrClearStatus(OVERFLOW_, ((data >> 6) & 1) == 1);
     updateZero(m_A & data);
 }
 
@@ -961,7 +961,7 @@ void Cpu::bitAbs()
 
     uint8_t data = m_memory.read(addr);
     setOrClearStatus(SIGN, ((data >> 7) & 1) == 1);
-    setOrClearStatus(OVERFLOW, ((data >> 6) & 1) == 1);
+    setOrClearStatus(OVERFLOW_, ((data >> 6) & 1) == 1);
     updateZero(m_A & data);
 }
 

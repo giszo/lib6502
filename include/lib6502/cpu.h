@@ -42,6 +42,9 @@ class Cpu
 
 	bool isInInterrupt() const;
 
+	uint8_t getA() const { return m_A; }
+	void setA(uint8_t data) { m_A = data; }
+
 	void setInstructionTracer(InstructionTracer* t);
 
 	/**
@@ -187,7 +190,7 @@ class Cpu
 	    INT_DISABLE = 0x04,
 	    DECIMAL     = 0x08,
 	    BREAK       = 0x10,
-	    OVERFLOW    = 0x40,
+	    OVERFLOW_   = 0x40,
 	    SIGN        = 0x80
 	};
 

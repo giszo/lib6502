@@ -1,0 +1,23 @@
+#include <boost/test/unit_test.hpp>
+
+#include "fixture.h"
+
+// $05
+BOOST_FIXTURE_TEST_CASE(testOraZero, Fixture)
+{
+    // ORA Zero
+    m_ram[0x8000] = 0x05;
+    m_ram[0x8001] = 0x42;
+    m_ram[0x0042] = 0xaa;
+
+    // perform the operation
+    m_cpu->setA(0x55);
+    m_cpu->tick();
+
+    // check the result
+    BOOST_REQUIRE_EQUAL(m_memAccessHist.size(), 3);
+    BOOST_CHECK(m_memAccessHist[0] == READ_AT(0x8000));
+    BOOST_CHECK(m_memAccessHist[1] == READ_AT(0x8001));
+    BOOST_CHECK(m_memAccessHist[2] == READ_AT(0x0042));
+    BOOST_CHECK_EQUAL(m_cpu->getA(), 0xff /* 0x55 | 0xaa */);
+}

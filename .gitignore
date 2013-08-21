@@ -1,4 +1,6 @@
+*.o
 *.os
 
 /lib6502.so
+/test/test
 /.sconsign.dblite
