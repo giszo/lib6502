@@ -73,7 +73,7 @@ void Cpu::nmi()
     m_inInterrupt = true;
 
     // disable interrupts
-    m_status |= INT_DISABLE;
+    m_status |= IntDisable;
     // save the current PC
     push8(m_PC >> 8);
     push8(m_PC & 0xff);
@@ -229,13 +229,13 @@ void Cpu::setOrClearStatus(uint8_t flagMask, bool condition)
 // =====================================================================================================================
 void Cpu::updateZero(uint8_t value)
 {
-    setOrClearStatus(ZERO, value == 0);
+    setOrClearStatus(Zero, value == 0);
 }
 
 // =====================================================================================================================
 void Cpu::updateSign(uint8_t value)
 {
-    setOrClearStatus(SIGN, (value & 0x80) != 0);
+    setOrClearStatus(Sign, (value & 0x80) != 0);
 }
 
 // =====================================================================================================================
@@ -244,7 +244,7 @@ void Cpu::bpl()
     traceInstruction("BPL");
 
     int8_t off = static_cast<int8_t>(read8());
-    if ((m_status & SIGN) == 0)
+    if ((m_status & Sign) == 0)
 	m_PC += off;
 }
 
@@ -254,7 +254,7 @@ void Cpu::bcs()
     traceInstruction("BCS");
 
     int8_t off = static_cast<int8_t>(read8());
-    if (m_status & CARRY)
+    if (m_status & Carry)
 	m_PC += off;
 }
 
@@ -264,7 +264,7 @@ void Cpu::bne()
     traceInstruction("BNE");
 
     int8_t off = static_cast<int8_t>(read8());
-    if ((m_status & ZERO) == 0)
+    if ((m_status & Zero) == 0)
 	m_PC += off;
 }
 
@@ -274,7 +274,7 @@ void Cpu::beq()
     traceInstruction("BEQ");
 
     int8_t off = static_cast<int8_t>(read8());
-    if (m_status & ZERO)
+    if (m_status & Zero)
 	m_PC += off;
 }
 
@@ -284,7 +284,7 @@ void Cpu::bcc()
     traceInstruction("BCC");
 
     int8_t off = static_cast<int8_t>(read8());
-    if ((m_status & CARRY) == 0)
+    if ((m_status & Carry) == 0)
 	m_PC += off;
 }
 
@@ -294,7 +294,7 @@ void Cpu::bmi()
     traceInstruction("BMI");
 
     int8_t off = static_cast<int8_t>(read8());
-    if (m_status & SIGN)
+    if (m_status & Sign)
 	m_PC += off;
 }
 
@@ -349,7 +349,7 @@ void Cpu::rti()
     m_PC = pop8() | (pop8() << 8);
 
     // enable interrupts
-    m_status &= INT_DISABLE;
+    m_status &= IntDisable;
 
     // we are not handling an interrupt anymore
     m_inInterrupt = false;
@@ -359,28 +359,28 @@ void Cpu::rti()
 void Cpu::sei()
 {
     traceInstruction("SEI");
-    m_status |= INT_DISABLE;
+    m_status |= IntDisable;
 }
 
 // =====================================================================================================================
 void Cpu::cld()
 {
     traceInstruction("CLD");
-    m_status &= ~DECIMAL;
+    m_status &= ~Decimal;
 }
 
 // =====================================================================================================================
 void Cpu::sec()
 {
     traceInstruction("SEC");
-    m_status |= CARRY;
+    m_status |= Carry;
 }
 
 // =====================================================================================================================
 void Cpu::clc()
 {
     traceInstruction("CLC");
-    m_status &= ~CARRY;
+    m_status &= ~Carry;
 }
 
 // =====================================================================================================================
@@ -779,11 +779,11 @@ void Cpu::adcImm()
 {
     uint8_t imm = read8();
     traceInstruction(MakeString() << "ADC #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-    int result = m_A + imm + (m_status & CARRY ? 1 : 0);
+    int result = m_A + imm + (m_status & Carry ? 1 : 0);
     m_A = result;
     updateZero(m_A);
     updateSign(m_A);
-    setOrClearStatus(CARRY, result > 255);
+    setOrClearStatus(Carry, result > 255);
     // TODO: V status update
 }
 
@@ -792,11 +792,11 @@ void Cpu::adcZero()
 {
     uint16_t addr = read8();
     traceInstruction(MakeString() << "ADC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    int result = m_A + m_memory.read(addr) + (m_status & CARRY ? 1 : 0);
+    int result = m_A + m_memory.read(addr) + (m_status & Carry ? 1 : 0);
     m_A = result;
     updateZero(m_A);
     updateSign(m_A);
-    setOrClearStatus(CARRY, result > 255);
+    setOrClearStatus(Carry, result > 255);
     // TODO: V status update
 }
 
@@ -805,11 +805,11 @@ void Cpu::adcAbs()
 {
     uint16_t addr = read16();
     traceInstruction(MakeString() << "ADC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    int result = m_A + m_memory.read(addr) + (m_status & CARRY ? 1 : 0);
+    int result = m_A + m_memory.read(addr) + (m_status & Carry ? 1 : 0);
     m_A = result;
     updateZero(m_A);
     updateSign(m_A);
-    setOrClearStatus(CARRY, result > 255);
+    setOrClearStatus(Carry, result > 255);
     // TODO: V status update
 }
 
@@ -818,11 +818,11 @@ void Cpu::adcAbsY()
 {
     uint16_t addr = read16();
     traceInstruction(MakeString() << "ADC $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",Y");
-    int result = m_A + m_memory.read(addr + m_Y) + (m_status & CARRY ? 1 : 0);
+    int result = m_A + m_memory.read(addr + m_Y) + (m_status & Carry ? 1 : 0);
     m_A = result;
     updateZero(m_A);
     updateSign(m_A);
-    setOrClearStatus(CARRY, result > 255);
+    setOrClearStatus(Carry, result > 255);
     // TODO: V status update
 }
 
@@ -831,10 +831,10 @@ void Cpu::sbcImm()
 {
     uint8_t imm = read8();
     traceInstruction(MakeString() << "SBC #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-    m_A = m_A - imm - (1 - (m_status & CARRY ? 1 : 0));
+    m_A = m_A - imm - (1 - (m_status & Carry ? 1 : 0));
     updateZero(m_A);
     updateSign(m_A);
-    setOrClearStatus(CARRY, m_A > 0);
+    setOrClearStatus(Carry, m_A > 0);
     // TODO: V status update
 }
 
@@ -843,10 +843,10 @@ void Cpu::sbcAbsY()
 {
     uint16_t addr = read16();
     traceInstruction(MakeString() << "SBC $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",Y");
-    m_A = m_A - m_memory.read(addr + m_Y) - (1 - (m_status & CARRY ? 1 : 0));
+    m_A = m_A - m_memory.read(addr + m_Y) - (1 - (m_status & Carry ? 1 : 0));
     updateZero(m_A);
     updateSign(m_A);
-    setOrClearStatus(CARRY, m_A > 0);
+    setOrClearStatus(Carry, m_A > 0);
     // TODO: V status update
 }
 
@@ -896,9 +896,9 @@ void Cpu::staIndY()
 void Cpu::cpxImm()
 {
     uint8_t imm = read8();
-    setOrClearStatus(CARRY, m_X >= imm);
-    setOrClearStatus(ZERO, m_X == imm);
-    setOrClearStatus(SIGN, m_X < imm);
+    setOrClearStatus(Carry, m_X >= imm);
+    setOrClearStatus(Zero, m_X == imm);
+    setOrClearStatus(Sign, m_X < imm);
     traceInstruction(MakeString() << "CPX #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
 }
 
@@ -906,9 +906,9 @@ void Cpu::cpxImm()
 void Cpu::cpyImm()
 {
     uint8_t imm = read8();
-    setOrClearStatus(CARRY, m_Y >= imm);
-    setOrClearStatus(ZERO, m_Y == imm);
-    setOrClearStatus(SIGN, m_Y < imm);
+    setOrClearStatus(Carry, m_Y >= imm);
+    setOrClearStatus(Zero, m_Y == imm);
+    setOrClearStatus(Sign, m_Y < imm);
     traceInstruction(MakeString() << "CPY #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
 }
 
@@ -916,9 +916,9 @@ void Cpu::cpyImm()
 void Cpu::cmpImm()
 {
     uint8_t imm = read8();
-    setOrClearStatus(CARRY, m_A >= imm);
-    setOrClearStatus(ZERO, m_A == imm);
-    setOrClearStatus(SIGN, m_A < imm);
+    setOrClearStatus(Carry, m_A >= imm);
+    setOrClearStatus(Zero, m_A == imm);
+    setOrClearStatus(Sign, m_A < imm);
     traceInstruction(MakeString() << "CMP #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
 }
 
@@ -927,9 +927,9 @@ void Cpu::cmpZero()
 {
     uint16_t addr = read8();
     uint8_t imm = m_memory.read(addr);
-    setOrClearStatus(CARRY, m_A >= imm);
-    setOrClearStatus(ZERO, m_A == imm);
-    setOrClearStatus(SIGN, m_A < imm);
+    setOrClearStatus(Carry, m_A >= imm);
+    setOrClearStatus(Zero, m_A == imm);
+    setOrClearStatus(Sign, m_A < imm);
     traceInstruction(MakeString() << "CMP $" << std::hex << std::setw(4) << std::setfill('0') << addr);
 }
 
@@ -938,9 +938,9 @@ void Cpu::cmpAbs()
 {
     uint16_t addr = read16();
     uint8_t imm = m_memory.read(addr);
-    setOrClearStatus(CARRY, m_A >= imm);
-    setOrClearStatus(ZERO, m_A == imm);
-    setOrClearStatus(SIGN, m_A < imm);
+    setOrClearStatus(Carry, m_A >= imm);
+    setOrClearStatus(Zero, m_A == imm);
+    setOrClearStatus(Sign, m_A < imm);
     traceInstruction(MakeString() << "CMP $" << std::hex << std::setw(4) << std::setfill('0') << addr);
 }
 
@@ -949,9 +949,9 @@ void Cpu::cmpAbsY()
 {
     uint16_t addr = read16();
     uint8_t imm = m_memory.read(addr + m_Y);
-    setOrClearStatus(CARRY, m_A >= imm);
-    setOrClearStatus(ZERO, m_A == imm);
-    setOrClearStatus(SIGN, m_A < imm);
+    setOrClearStatus(Carry, m_A >= imm);
+    setOrClearStatus(Zero, m_A == imm);
+    setOrClearStatus(Sign, m_A < imm);
     traceInstruction(MakeString() << "CMP $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",Y");
 }
 
@@ -962,8 +962,8 @@ void Cpu::bitZero()
     traceInstruction(MakeString() << "BIT $" << std::hex << std::setw(4) << std::setfill('0') << addr);
 
     uint8_t data = m_memory.read(addr);
-    setOrClearStatus(SIGN, ((data >> 7) & 1) == 1);
-    setOrClearStatus(OVERFLOW_, ((data >> 6) & 1) == 1);
+    setOrClearStatus(Sign, ((data >> 7) & 1) == 1);
+    setOrClearStatus(Overflow, ((data >> 6) & 1) == 1);
     updateZero(m_A & data);
 }
 
@@ -974,8 +974,8 @@ void Cpu::bitAbs()
     traceInstruction(MakeString() << "BIT $" << std::hex << std::setw(4) << std::setfill('0') << addr);
 
     uint8_t data = m_memory.read(addr);
-    setOrClearStatus(SIGN, ((data >> 7) & 1) == 1);
-    setOrClearStatus(OVERFLOW_, ((data >> 6) & 1) == 1);
+    setOrClearStatus(Sign, ((data >> 7) & 1) == 1);
+    setOrClearStatus(Overflow, ((data >> 6) & 1) == 1);
     updateZero(m_A & data);
 }
 
@@ -984,7 +984,7 @@ void Cpu::aslAcc()
 {
     traceInstruction("ASL");
     // bit #0 is shifted into carry
-    setOrClearStatus(CARRY, (m_A & 0x80) == 0x80);
+    setOrClearStatus(Carry, (m_A & 0x80) == 0x80);
     m_A <<= 1;
     updateZero(m_A);
     updateSign(m_A);
@@ -995,7 +995,7 @@ void Cpu::lsrAcc()
 {
     traceInstruction("LSR");
     // bit #0 is shifted into carry
-    setOrClearStatus(CARRY, (m_A & 0x1) == 1);
+    setOrClearStatus(Carry, (m_A & 0x1) == 1);
     m_A >>= 1;
     updateZero(m_A);
     updateSign(m_A);
@@ -1008,7 +1008,7 @@ void Cpu::lsrZero()
     traceInstruction(MakeString() << "LSR $" << std::hex << std::setw(4) << std::setfill('0') << addr);
     uint8_t data = m_memory.read(addr);
     // bit #0 is shifted into carry
-    setOrClearStatus(CARRY, (data & 0x1) == 1);
+    setOrClearStatus(Carry, (data & 0x1) == 1);
     data >>= 1;
     updateZero(data);
     updateSign(data);
@@ -1022,7 +1022,7 @@ void Cpu::lsrAbs()
     traceInstruction(MakeString() << "LSR $" << std::hex << std::setw(4) << std::setfill('0') << addr);
     uint8_t data = m_memory.read(addr);
     // bit #0 is shifted into carry
-    setOrClearStatus(CARRY, (data & 0x1) == 1);
+    setOrClearStatus(Carry, (data & 0x1) == 1);
     data >>= 1;
     updateZero(data);
     updateSign(data);
@@ -1036,9 +1036,9 @@ void Cpu::rolAcc()
     // bit #0 is shifted into carry
     bool setCarry = m_A & 0x80;
     m_A <<= 1;
-    if (m_status & CARRY)
+    if (m_status & Carry)
 	m_A |= 1;
-    setOrClearStatus(CARRY, setCarry);
+    setOrClearStatus(Carry, setCarry);
     updateZero(m_A);
     updateSign(m_A);
 }
@@ -1052,9 +1052,9 @@ void Cpu::rolZero()
     // bit #0 is shifted into carry
     bool setCarry = data & 0x80;
     data <<= 1;
-    if (m_status & CARRY)
+    if (m_status & Carry)
 	data |= 1;
-    setOrClearStatus(CARRY, setCarry);
+    setOrClearStatus(Carry, setCarry);
     updateZero(data);
     updateSign(data);
     m_memory.write(addr, data);
@@ -1069,9 +1069,9 @@ void Cpu::rolAbs()
     // bit #0 is shifted into carry
     bool setCarry = data & 0x80;
     data <<= 1;
-    if (m_status & CARRY)
+    if (m_status & Carry)
 	data |= 1;
-    setOrClearStatus(CARRY, setCarry);
+    setOrClearStatus(Carry, setCarry);
     updateZero(data);
     updateSign(data);
     m_memory.write(addr, data);
@@ -1083,9 +1083,9 @@ void Cpu::rorAcc()
     traceInstruction("ROR");
     bool setCarry = (m_A & 0x1) == 1;
     m_A >>= 1;
-    if (m_status & CARRY)
+    if (m_status & Carry)
 	m_A |= 0x80;
-    setOrClearStatus(CARRY, setCarry);
+    setOrClearStatus(Carry, setCarry);
     updateZero(m_A);
     updateSign(m_A);
 }
@@ -1098,9 +1098,9 @@ void Cpu::rorAbsX()
     uint8_t data = m_memory.read(addr + m_X);
     bool setCarry = (data & 0x1) == 1;
     data >>= 1;
-    if (m_status & CARRY)
+    if (m_status & Carry)
 	data |= 0x80;
-    setOrClearStatus(CARRY, setCarry);
+    setOrClearStatus(Carry, setCarry);
     m_memory.write(addr + m_X, data);
     updateZero(data);
     updateSign(data);

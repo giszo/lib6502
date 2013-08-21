@@ -31,6 +31,7 @@ class CpuException : public std::runtime_error
 class Cpu
 {
     public:
+	// structure representing the internal state of the 6502 CPU
 	struct State
 	{
 	    uint8_t m_A;
@@ -40,6 +41,18 @@ class Cpu
 	    uint8_t m_SP;
 	    uint16_t m_PC;
 	    bool m_inInterrupt;
+	};
+
+	// masks for the available status bits
+	enum Flags
+	{
+	    Carry      = 0x01,
+	    Zero       = 0x02,
+	    IntDisable = 0x04,
+	    Decimal    = 0x08,
+	    Break      = 0x10,
+	    Overflow   = 0x40,
+	    Sign       = 0x80
 	};
 
 	Cpu(Memory& memory);
@@ -186,17 +199,6 @@ class Cpu
 	void rorAbsX();
 
     private:
-	enum Flags
-	{
-	    CARRY       = 0x01,
-	    ZERO        = 0x02,
-	    INT_DISABLE = 0x04,
-	    DECIMAL     = 0x08,
-	    BREAK       = 0x10,
-	    OVERFLOW_   = 0x40,
-	    SIGN        = 0x80
-	};
-
 	// the actual state of the CPU
 	State m_state;
 	// the state of the CPU before executing the next instruction (used for tracing)
