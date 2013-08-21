@@ -2,7 +2,7 @@ Import("env")
 
 test = env.Program(
     "test",
-    source = ["main.cpp", "fixture.cpp", "ora.cpp"],
+    source = ["main.cpp", "fixture.cpp", "ora.cpp", "asl.cpp", "lsr.cpp", "rol.cpp"],
     CPPFLAGS = ["-Wall", "-O2", "-std=c++11"],
     CPPPATH = ["#include/"],
     LIBS = [env["lib"], "boost_unit_test_framework"]

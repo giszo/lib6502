@@ -159,11 +159,16 @@ class Cpu
 
 	void eorImm();
 	void eorZero();
+
 	void andImm();
+	void andZero();
+	void andAbs();
 	void andAbsX();
+	void andAbsY();
 
 	void ldaImm();
 	void ldaZero();
+	void ldaZeroX();
 	void ldaAbs();
 	void ldaAbsX();
 	void ldaAbsY();
@@ -171,13 +176,18 @@ class Cpu
 
 	void adcImm();
 	void adcZero();
+	void adcZeroX();
 	void adcAbs();
+	void adcAbsX();
 	void adcAbsY();
 
 	void sbcImm();
+	void sbcZeroX();
+	void sbcAbs();
 	void sbcAbsY();
 
 	void staZero();
+	void staZeroX();
 	void staAbs();
 	void staAbsX();
 	void staAbsY();
@@ -189,13 +199,16 @@ class Cpu
 
 	void cmpImm();
 	void cmpZero();
+	void cmpZeroX();
 	void cmpAbs();
+	void cmpAbsX();
 	void cmpAbsY();
 
 	void bitZero();
 	void bitAbs();
 
 	void aslAcc();
+	void aslAbs();
 	void lsrAcc();
 	void lsrZero();
 	void lsrAbs();

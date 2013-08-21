@@ -107,6 +107,7 @@ void Cpu::buildInstructionTable()
     INSTR(0x09, oraImm);
     INSTR(0x0a, aslAcc);
     INSTR(0x0d, oraAbs);
+    INSTR(0x0e, aslAbs);
     INSTR(0x10, bpl);
     INSTR(0x15, oraZeroX);
     INSTR(0x18, clc);
@@ -114,13 +115,16 @@ void Cpu::buildInstructionTable()
     INSTR(0x1d, oraAbsX);
     INSTR(0x20, jsrAbs);
     INSTR(0x24, bitZero);
+    INSTR(0x25, andZero);
     INSTR(0x26, rolZero);
     INSTR(0x29, andImm);
     INSTR(0x2a, rolAcc);
     INSTR(0x2c, bitAbs);
+    INSTR(0x2d, andAbs);
     INSTR(0x2e, rolAbs);
     INSTR(0x30, bmi);
     INSTR(0x38, sec);
+    INSTR(0x39, andAbsY);
     INSTR(0x3d, andAbsX);
     INSTR(0x40, rti);
     INSTR(0x45, eorZero);
@@ -137,8 +141,10 @@ void Cpu::buildInstructionTable()
     INSTR(0x6a, rorAcc);
     INSTR(0x6c, jmpInd);
     INSTR(0x6d, adcAbs);
+    INSTR(0x75, adcZeroX);
     INSTR(0x78, sei);
     INSTR(0x79, adcAbsY);
+    INSTR(0x7d, adcAbsX);
     INSTR(0x7e, rorAbsX);
     INSTR(0x84, styZero);
     INSTR(0x85, staZero);
@@ -150,6 +156,7 @@ void Cpu::buildInstructionTable()
     INSTR(0x8e, stxAbs);
     INSTR(0x90, bcc);
     INSTR(0x91, staIndY);
+    INSTR(0x95, staZeroX);
     INSTR(0x98, tya);
     INSTR(0x99, staAbsY);
     INSTR(0x9a, txs);
@@ -167,6 +174,7 @@ void Cpu::buildInstructionTable()
     INSTR(0xae, ldxAbs);
     INSTR(0xb0, bcs);
     INSTR(0xb1, ldaIndY);
+    INSTR(0xb5, ldaZeroX);
     INSTR(0xb9, ldaAbsY);
     INSTR(0xbc, ldyAbsX);
     INSTR(0xbd, ldaAbsX);
@@ -180,15 +188,19 @@ void Cpu::buildInstructionTable()
     INSTR(0xcd, cmpAbs);
     INSTR(0xce, decAbs);
     INSTR(0xd0, bne);
+    INSTR(0xd5, cmpZeroX);
     INSTR(0xd8, cld);
     INSTR(0xd9, cmpAbsY);
+    INSTR(0xdd, cmpAbsX);
     INSTR(0xde, decAbsX);
     INSTR(0xe0, cpxImm);
     INSTR(0xe6, incZero);
     INSTR(0xe8, inx);
     INSTR(0xe9, sbcImm);
+    INSTR(0xed, sbcAbs);
     INSTR(0xee, incAbs);
     INSTR(0xf0, beq);
+    INSTR(0xf5, sbcZeroX);
     INSTR(0xf9, sbcAbsY);
 
 #undef INSTR
@@ -271,9 +283,9 @@ void Cpu::bcs()
 // =====================================================================================================================
 void Cpu::bne()
 {
-    traceInstruction("BNE");
-
     int8_t off = static_cast<int8_t>(read8());
+    traceInstruction(MakeString() << "BNE " << (int)off);
+
     if ((m_status & Zero) == 0)
 	m_PC += off;
 }
@@ -281,9 +293,9 @@ void Cpu::bne()
 // =====================================================================================================================
 void Cpu::beq()
 {
-    traceInstruction("BEQ");
-
     int8_t off = static_cast<int8_t>(read8());
+    traceInstruction(MakeString() << "BEQ " << (int)off);
+
     if (m_status & Zero)
 	m_PC += off;
 }
@@ -352,6 +364,10 @@ void Cpu::rts()
 void Cpu::rti()
 {
     traceInstruction("RTI");
+
+    // do some sanity checking
+    if (!m_inInterrupt)
+	throw CpuException("executed RTI without being in an interrupt");
 
     // restore status
     m_status = pop8();
@@ -684,205 +700,6 @@ void Cpu::eorZero()
 }
 
 // =====================================================================================================================
-void Cpu::andImm()
-{
-    uint8_t imm = read8();
-    m_A &= imm;
-    updateZero(m_A);
-    updateSign(m_A);
-    traceInstruction(MakeString() << "AND #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-}
-
-// =====================================================================================================================
-void Cpu::andAbsX()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "AND $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",X");
-    m_A &= m_memory.read(abs + m_X);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaImm()
-{
-    m_A = read8();
-    updateZero(m_A);
-    updateSign(m_A);
-    traceInstruction(MakeString() << "LDA #$" << std::hex << std::setw(2) << std::setfill('0') << (int)m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaZero()
-{
-    uint16_t abs = read8();
-    traceInstruction(MakeString() << "LDA $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_A = m_memory.read(abs);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaAbs()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "LDA $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_A = m_memory.read(abs);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaAbsX()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "LDA $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",X");
-    m_A = m_memory.read(abs + m_X);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaAbsY()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "LDA $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",Y");
-    m_A = m_memory.read(abs + m_Y);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaIndY()
-{
-    uint8_t off = read8();
-    traceInstruction(MakeString() << "LDA ($" << std::hex << std::setw(2) << std::setfill('0') << off << "),Y");
-
-    uint16_t addr = (m_memory.read(off) | (m_memory.read(off + 1) << 8)) + m_Y;
-    m_A = m_memory.read(addr);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::adcImm()
-{
-    uint8_t imm = read8();
-    traceInstruction(MakeString() << "ADC #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-    int result = m_A + imm + (m_status & Carry ? 1 : 0);
-    m_A = result;
-    updateZero(m_A);
-    updateSign(m_A);
-    setOrClearStatus(Carry, result > 255);
-    // TODO: V status update
-}
-
-// =====================================================================================================================
-void Cpu::adcZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "ADC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    int result = m_A + m_memory.read(addr) + (m_status & Carry ? 1 : 0);
-    m_A = result;
-    updateZero(m_A);
-    updateSign(m_A);
-    setOrClearStatus(Carry, result > 255);
-    // TODO: V status update
-}
-
-// =====================================================================================================================
-void Cpu::adcAbs()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "ADC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    int result = m_A + m_memory.read(addr) + (m_status & Carry ? 1 : 0);
-    m_A = result;
-    updateZero(m_A);
-    updateSign(m_A);
-    setOrClearStatus(Carry, result > 255);
-    // TODO: V status update
-}
-
-// =====================================================================================================================
-void Cpu::adcAbsY()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "ADC $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",Y");
-    int result = m_A + m_memory.read(addr + m_Y) + (m_status & Carry ? 1 : 0);
-    m_A = result;
-    updateZero(m_A);
-    updateSign(m_A);
-    setOrClearStatus(Carry, result > 255);
-    // TODO: V status update
-}
-
-// =====================================================================================================================
-void Cpu::sbcImm()
-{
-    uint8_t imm = read8();
-    traceInstruction(MakeString() << "SBC #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-    m_A = m_A - imm - (1 - (m_status & Carry ? 1 : 0));
-    updateZero(m_A);
-    updateSign(m_A);
-    setOrClearStatus(Carry, m_A > 0);
-    // TODO: V status update
-}
-
-// =====================================================================================================================
-void Cpu::sbcAbsY()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "SBC $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",Y");
-    m_A = m_A - m_memory.read(addr + m_Y) - (1 - (m_status & Carry ? 1 : 0));
-    updateZero(m_A);
-    updateSign(m_A);
-    setOrClearStatus(Carry, m_A > 0);
-    // TODO: V status update
-}
-
-// =====================================================================================================================
-void Cpu::staZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(2) << std::setfill('0') << addr);
-    m_memory.write(addr, m_A);
-}
-
-// =====================================================================================================================
-void Cpu::staAbs()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_memory.write(abs, m_A);
-}
-
-// =====================================================================================================================
-void Cpu::staAbsX()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",X");
-    m_memory.write(abs + m_X, m_A);
-}
-
-// =====================================================================================================================
-void Cpu::staAbsY()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",Y");
-    m_memory.write(abs + m_Y, m_A);
-}
-
-// =====================================================================================================================
-void Cpu::staIndY()
-{
-    uint8_t off = read8();
-    traceInstruction(MakeString() << "STA ($" << std::hex << std::setw(2) << std::setfill('0') << off << "),Y");
-
-    uint16_t addr = (m_memory.read(off) | (m_memory.read(off + 1) << 8)) + m_Y;
-    m_memory.write(addr, m_A);
-}
-
-// =====================================================================================================================
 void Cpu::cpxImm()
 {
     uint8_t imm = read8();
@@ -900,49 +717,6 @@ void Cpu::cpyImm()
     setOrClearStatus(Zero, m_Y == imm);
     setOrClearStatus(Sign, m_Y < imm);
     traceInstruction(MakeString() << "CPY #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-}
-
-// =====================================================================================================================
-void Cpu::cmpImm()
-{
-    uint8_t imm = read8();
-    setOrClearStatus(Carry, m_A >= imm);
-    setOrClearStatus(Zero, m_A == imm);
-    setOrClearStatus(Sign, m_A < imm);
-    traceInstruction(MakeString() << "CMP #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-}
-
-// =====================================================================================================================
-void Cpu::cmpZero()
-{
-    uint16_t addr = read8();
-    uint8_t imm = m_memory.read(addr);
-    setOrClearStatus(Carry, m_A >= imm);
-    setOrClearStatus(Zero, m_A == imm);
-    setOrClearStatus(Sign, m_A < imm);
-    traceInstruction(MakeString() << "CMP $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-}
-
-// =====================================================================================================================
-void Cpu::cmpAbs()
-{
-    uint16_t addr = read16();
-    uint8_t imm = m_memory.read(addr);
-    setOrClearStatus(Carry, m_A >= imm);
-    setOrClearStatus(Zero, m_A == imm);
-    setOrClearStatus(Sign, m_A < imm);
-    traceInstruction(MakeString() << "CMP $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-}
-
-// =====================================================================================================================
-void Cpu::cmpAbsY()
-{
-    uint16_t addr = read16();
-    uint8_t imm = m_memory.read(addr + m_Y);
-    setOrClearStatus(Carry, m_A >= imm);
-    setOrClearStatus(Zero, m_A == imm);
-    setOrClearStatus(Sign, m_A < imm);
-    traceInstruction(MakeString() << "CMP $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",Y");
 }
 
 // =====================================================================================================================
@@ -967,17 +741,6 @@ void Cpu::bitAbs()
     setOrClearStatus(Sign, ((data >> 7) & 1) == 1);
     setOrClearStatus(Overflow, ((data >> 6) & 1) == 1);
     updateZero(m_A & data);
-}
-
-// =====================================================================================================================
-void Cpu::aslAcc()
-{
-    traceInstruction("ASL");
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (m_A & 0x80) == 0x80);
-    m_A <<= 1;
-    updateZero(m_A);
-    updateSign(m_A);
 }
 
 // =====================================================================================================================
