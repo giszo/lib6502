@@ -17,7 +17,7 @@ class InstructionTracer
 	virtual ~InstructionTracer()
 	{}
 
-	virtual void trace(const std::string& inst) = 0;
+	virtual void trace(uint16_t PC, const std::string& inst) = 0;
 };
 
 class CpuException : public std::runtime_error
@@ -204,6 +204,8 @@ class Cpu
 
 	std::function<void()> m_instrTable[256];
 
+	// program counter before fetching the next instruction
+	uint16_t m_instrPC;
 	InstructionTracer* m_instrTracer;
 };
 

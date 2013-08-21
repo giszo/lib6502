@@ -32,6 +32,9 @@ void Cpu::setInstructionTracer(InstructionTracer* t)
 // =====================================================================================================================
 void Cpu::tick()
 {
+    // save the PC for instruction tracing
+    m_instrPC = m_PC;
+
     uint8_t opCode = read8();
     auto instr = m_instrTable[opCode];
 
@@ -171,7 +174,7 @@ void Cpu::buildInstructionTable()
 void Cpu::traceInstruction(const std::string& s)
 {
     if (m_instrTracer)
-	m_instrTracer->trace(s);
+	m_instrTracer->trace(m_instrPC, s);
 }
 
 // =====================================================================================================================
