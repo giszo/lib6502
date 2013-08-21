@@ -3,12 +3,19 @@
 
 #include <iomanip>
 
+#define m_A m_state.m_A
+#define m_X m_state.m_X
+#define m_Y m_state.m_Y
+#define m_status m_state.m_status
+#define m_SP m_state.m_SP
+#define m_PC m_state.m_PC
+#define m_inInterrupt m_state.m_inInterrupt
+
 using namespace lib6502;
 
 // =====================================================================================================================
 Cpu::Cpu(Memory& memory)
-    : m_inInterrupt(false),
-      m_memory(memory),
+    : m_memory(memory),
       m_instrTracer(NULL)
 {
     // build the instruction handler table
@@ -24,6 +31,12 @@ bool Cpu::isInInterrupt() const
 }
 
 // =====================================================================================================================
+Cpu::State& Cpu::getState()
+{
+    return m_state;
+}
+
+// =====================================================================================================================
 void Cpu::setInstructionTracer(InstructionTracer* t)
 {
     m_instrTracer = t;
@@ -32,8 +45,8 @@ void Cpu::setInstructionTracer(InstructionTracer* t)
 // =====================================================================================================================
 void Cpu::tick()
 {
-    // save the PC for instruction tracing
-    m_instrPC = m_PC;
+    // save the state of the CPU for tracing
+    m_instrState = m_state;
 
     uint8_t opCode = read8();
     auto instr = m_instrTable[opCode];
@@ -51,6 +64,7 @@ void Cpu::reset()
     m_PC = (m_memory.read(0xfffd) << 8) | m_memory.read(0xfffc);
     m_SP = 0xff;
     m_status = 0x00;
+    m_inInterrupt = false;
 }
 
 // =====================================================================================================================
@@ -174,7 +188,7 @@ void Cpu::buildInstructionTable()
 void Cpu::traceInstruction(const std::string& s)
 {
     if (m_instrTracer)
-	m_instrTracer->trace(m_instrPC, s);
+	m_instrTracer->trace(m_instrState, s);
 }
 
 // =====================================================================================================================

@@ -11,14 +11,7 @@
 namespace lib6502
 {
 
-class InstructionTracer
-{
-    public:
-	virtual ~InstructionTracer()
-	{}
-
-	virtual void trace(uint16_t PC, const std::string& inst) = 0;
-};
+class InstructionTracer;
 
 class CpuException : public std::runtime_error
 {
@@ -38,12 +31,22 @@ class CpuException : public std::runtime_error
 class Cpu
 {
     public:
+	struct State
+	{
+	    uint8_t m_A;
+	    uint8_t m_X;
+	    uint8_t m_Y;
+	    uint8_t m_status;
+	    uint8_t m_SP;
+	    uint16_t m_PC;
+	    bool m_inInterrupt;
+	};
+
 	Cpu(Memory& memory);
 
 	bool isInInterrupt() const;
 
-	uint8_t getA() const { return m_A; }
-	void setA(uint8_t data) { m_A = data; }
+	State& getState();
 
 	void setInstructionTracer(InstructionTracer* t);
 
@@ -194,22 +197,31 @@ class Cpu
 	    SIGN        = 0x80
 	};
 
-	uint8_t m_A;
-	uint8_t m_X;
-	uint8_t m_Y;
-	uint8_t m_status;
-	uint8_t m_SP;
-	uint16_t m_PC;
-
-	bool m_inInterrupt;
-
+	// the actual state of the CPU
+	State m_state;
+	// the state of the CPU before executing the next instruction (used for tracing)
+	State m_instrState;
+	// reference to the memory used by the CPU
 	Memory& m_memory;
 
 	std::function<void()> m_instrTable[256];
 
-	// program counter before fetching the next instruction
-	uint16_t m_instrPC;
 	InstructionTracer* m_instrTracer;
+};
+
+class InstructionTracer
+{
+    public:
+	virtual ~InstructionTracer()
+	{}
+
+	/**
+	 * Callback for tracing one instruction.
+	 *
+	 * @param state the CPU state before fetching and executing the next instruction
+	 * @param inst string representation of the instruction
+	 */
+	virtual void trace(const Cpu::State& state, const std::string& inst) = 0;
 };
 
 }
