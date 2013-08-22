@@ -68,8 +68,7 @@ void Cpu::tick()
 void Cpu::reset()
 {
     m_PC = (m_memory.read(0xfffd) << 8) | m_memory.read(0xfffc);
-    m_SP = 0xff;
-    m_status = 0x00;
+    m_status = Always1 | IntDisable;
     m_inInterrupt = false;
 }
 

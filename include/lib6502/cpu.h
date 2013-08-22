@@ -53,6 +53,7 @@ class Cpu
 	    IntDisable = 0x04,
 	    Decimal    = 0x08,
 	    Break      = 0x10,
+	    Always1    = 0x20,
 	    Overflow   = 0x40,
 	    Sign       = 0x80
 	};
