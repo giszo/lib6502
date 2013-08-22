@@ -8,74 +8,54 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::aslAcc()
-{
-    traceInstruction("ASL A");
-
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (m_A & 0x80) == 0x80);
-    m_A <<= 1;
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::aslZero()
+void Cpu::decZero()
 {
     uint16_t address = addrZero();
-    traceInstruction(MakeString(true) << "ASL $" << std::setw(2) << std::setfill('0') << address);
+    traceInstruction(MakeString(true) << "DEC $" << std::setw(2) << std::setfill('0') << address);
 
     uint8_t data = m_memory.read(address);
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (data & 0x80) == 0x80);
-    data <<= 1;
+    --data;
     updateZero(data);
     updateSign(data);
     m_memory.write(address, data);
 }
 
 // =====================================================================================================================
-void Cpu::aslZeroX()
+void Cpu::decZeroX()
 {
     uint8_t offset;
     uint16_t address = addrZeroX(offset);
-    traceInstruction(MakeString(true) << "ASL $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
+    traceInstruction(MakeString(true) << "DEC $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
 
     uint8_t data = m_memory.read(address);
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (data & 0x80) == 0x80);
-    data <<= 1;
+    --data;
     updateZero(data);
     updateSign(data);
     m_memory.write(address, data);
 }
 
 // =====================================================================================================================
-void Cpu::aslAbs()
+void Cpu::decAbs()
 {
     uint16_t address = addrAbsolute();
-    traceInstruction(MakeString(true) << "ASL $" << std::setw(4) << std::setfill('0') << address);
+    traceInstruction(MakeString(true) << "DEC $" << std::setw(4) << std::setfill('0') << address);
 
     uint8_t data = m_memory.read(address);
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (data & 0x80) == 0x80);
-    data <<= 1;
+    --data;
     updateZero(data);
     updateSign(data);
     m_memory.write(address, data);
 }
 
 // =====================================================================================================================
-void Cpu::aslAbsX()
+void Cpu::decAbsX()
 {
     uint16_t abs;
     uint16_t address = addrAbsoluteX(abs);
-    traceInstruction(MakeString(true) << "ASL $" << std::setw(4) << std::setfill('0') << abs);
+    traceInstruction(MakeString(true) << "DEC $" << std::setw(4) << std::setfill('0') << abs << ",X");
 
     uint8_t data = m_memory.read(address);
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (data & 0x80) == 0x80);
-    data <<= 1;
+    --data;
     updateZero(data);
     updateSign(data);
     m_memory.write(address, data);

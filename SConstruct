@@ -2,6 +2,9 @@ env = Environment()
 
 sources = [
     "cpu.cpp",
+    "branch.cpp",
+    "flags.cpp",
+    "stack.cpp",
     "ora.cpp",
     "lda.cpp",
     "sta.cpp",
@@ -9,7 +12,19 @@ sources = [
     "cmp.cpp",
     "asl.cpp",
     "and.cpp",
-    "adc.cpp"
+    "adc.cpp",
+    "eor.cpp",
+    "cpx.cpp",
+    "cpy.cpp",
+    "ror.cpp",
+    "ldy.cpp",
+    "sty.cpp",
+    "lsr.cpp",
+    "rol.cpp",
+    "inc.cpp",
+    "dec.cpp",
+    "ldx.cpp",
+    "stx.cpp"
 ]
 
 env["lib"] = env.SharedLibrary(

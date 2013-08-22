@@ -10,49 +10,67 @@ using lib6502::Cpu;
 // =====================================================================================================================
 void Cpu::staZero()
 {
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(2) << std::setfill('0') << addr);
-    m_memory.write(addr, m_A);
+    uint16_t address = addrZero();
+    traceInstruction(MakeString(true) << "STA $" << std::setw(2) << std::setfill('0') << address);
+
+    m_memory.write(address, m_A);
 }
 
 // =====================================================================================================================
 void Cpu::staZeroX()
 {
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(2) << std::setfill('0') << addr << ",X");
-    m_memory.write(addr + m_X, m_A);
+    uint8_t offset;
+    uint16_t address = addrZeroX(offset);
+    traceInstruction(MakeString(true) << "STA $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
+
+    m_memory.write(address, m_A);
 }
 
 // =====================================================================================================================
 void Cpu::staAbs()
 {
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_memory.write(abs, m_A);
+    uint16_t address = addrAbsolute();
+    traceInstruction(MakeString(true) << "STA $" << std::setw(4) << std::setfill('0') << address);
+
+    m_memory.write(address, m_A);
 }
 
 // =====================================================================================================================
 void Cpu::staAbsX()
 {
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",X");
-    m_memory.write(abs + m_X, m_A);
+    uint16_t abs;
+    uint16_t address = addrAbsoluteX(abs);
+    traceInstruction(MakeString(true) << "STA $" << std::setw(4) << std::setfill('0') << abs << ",X");
+
+    m_memory.write(address, m_A);
 }
 
 // =====================================================================================================================
 void Cpu::staAbsY()
 {
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "STA $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",Y");
-    m_memory.write(abs + m_Y, m_A);
+    uint16_t abs;
+    uint16_t address = addrAbsoluteY(abs);
+    traceInstruction(MakeString(true) << "STA $" << std::setw(4) << std::setfill('0') << abs << ",Y");
+
+    m_memory.write(address, m_A);
+}
+
+// =====================================================================================================================
+void Cpu::staIndX()
+{
+    uint8_t offset;
+    uint16_t address = addrIndirectX(offset);
+    traceInstruction(MakeString(true) << "STA ($" << std::setw(2) << std::setfill('0') << (int)offset << ",X)");
+
+    m_memory.write(address, m_A);
 }
 
 // =====================================================================================================================
 void Cpu::staIndY()
 {
-    uint8_t off = read8();
-    traceInstruction(MakeString() << "STA ($" << std::hex << std::setw(2) << std::setfill('0') << off << "),Y");
+    uint8_t offset;
+    uint16_t address = addrIndirectY(offset);
+    traceInstruction(MakeString(true) << "STA ($" << std::setw(2) << std::setfill('0') << (int)offset << "),Y");
 
-    uint16_t addr = (m_memory.read(off) | (m_memory.read(off + 1) << 8)) + m_Y;
-    m_memory.write(addr, m_A);
+    m_memory.write(address, m_A);
 }

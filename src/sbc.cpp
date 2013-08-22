@@ -7,12 +7,15 @@
 
 using lib6502::Cpu;
 
-// TODO: overflow is not updated!
 #define SBC_CORE(s) \
-    m_A = m_A - (s) - (1 - (m_status & Carry ? 1 : 0)); \
+    uint8_t _imm = (s); \
+    unsigned result = m_A - _imm - (1 - (m_status & Carry ? 1 : 0));		\
+    uint8_t origA = m_A; \
+    m_A = result;	 \
     updateZero(m_A); \
     updateSign(m_A); \
-    setOrClearStatus(Carry, (m_A & 0x80) == 0x80);
+    setOrClearStatus(Carry, result < 0x100); \
+    setOrClearStatus(Overflow, (origA ^ _imm) & (origA ^ m_A) & 0x80);
 
 // =====================================================================================================================
 void Cpu::sbcImm()
@@ -23,25 +26,66 @@ void Cpu::sbcImm()
 }
 
 // =====================================================================================================================
+void Cpu::sbcZero()
+{
+    uint16_t address = addrZero();
+    traceInstruction(MakeString(true) << "SBC $" << std::setw(2) << std::setfill('0') << address);
+
+    SBC_CORE(m_memory.read(address));
+}
+
+// =====================================================================================================================
 void Cpu::sbcZeroX()
 {
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "SBC $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",X");
-    SBC_CORE(m_memory.read(addr + m_X));
+    uint8_t offset;
+    uint16_t address = addrZeroX(offset);
+    traceInstruction(MakeString(true) << "SBC $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
+
+    SBC_CORE(m_memory.read(address));
 }
 
 // =====================================================================================================================
 void Cpu::sbcAbs()
 {
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "SBC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
+    uint16_t addr = addrAbsolute();
+    traceInstruction(MakeString(true) << "SBC $" << std::setw(4) << std::setfill('0') << addr);
+    SBC_CORE(m_memory.read(addr));
+}
+
+// =====================================================================================================================
+void Cpu::sbcAbsX()
+{
+    uint16_t abs;
+    uint16_t addr = addrAbsoluteX(abs);
+    traceInstruction(MakeString() << "SBC $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",X");
     SBC_CORE(m_memory.read(addr));
 }
 
 // =====================================================================================================================
 void Cpu::sbcAbsY()
 {
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "SBC $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",Y");
-    SBC_CORE(m_memory.read(addr + m_Y));
+    uint16_t abs;
+    uint16_t addr = addrAbsoluteY(abs);
+    traceInstruction(MakeString() << "SBC $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",Y");
+    SBC_CORE(m_memory.read(addr));
+}
+
+// =====================================================================================================================
+void Cpu::sbcIndX()
+{
+    uint8_t offset;
+    uint16_t address = addrIndirectX(offset);
+    traceInstruction(MakeString(true) << "SBC ($" << std::setw(2) << std::setfill('0') << (int)offset << ",X)");
+
+    SBC_CORE(m_memory.read(address));
+}
+
+// =====================================================================================================================
+void Cpu::sbcIndY()
+{
+    uint8_t offset;
+    uint16_t address = addrIndirectY(offset);
+    traceInstruction(MakeString(true) << "SBC $(" << std::setw(2) << std::setfill('0') << (int)offset << "),Y");
+
+    SBC_CORE(m_memory.read(address));
 }

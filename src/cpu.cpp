@@ -77,13 +77,14 @@ void Cpu::nmi()
 {
     m_inInterrupt = true;
 
-    // disable interrupts
-    m_status |= IntDisable;
     // save the current PC
     push8(m_PC >> 8);
     push8(m_PC & 0xff);
     // save the status
     push8(m_status);
+
+    // disable interrupts
+    m_status |= IntDisable;
 
     // read the NMI vector
     m_PC = (m_memory.read(0xfffb) << 8) | m_memory.read(0xfffa);
@@ -102,49 +103,77 @@ void Cpu::buildInstructionTable()
 #define INSTR(code, func) \
     m_instrTable[code] = std::bind(&Cpu::func, this)
 
+    INSTR(0x01, oraIndX);
     INSTR(0x05, oraZero);
+    INSTR(0x06, aslZero);
+    INSTR(0x08, php);
     INSTR(0x09, oraImm);
     INSTR(0x0a, aslAcc);
     INSTR(0x0d, oraAbs);
     INSTR(0x0e, aslAbs);
     INSTR(0x10, bpl);
+    INSTR(0x11, oraIndY);
     INSTR(0x15, oraZeroX);
+    INSTR(0x16, aslZeroX);
     INSTR(0x18, clc);
     INSTR(0x19, oraAbsY);
     INSTR(0x1d, oraAbsX);
+    INSTR(0x1e, aslAbsX);
     INSTR(0x20, jsrAbs);
+    INSTR(0x21, andIndX);
     INSTR(0x24, bitZero);
     INSTR(0x25, andZero);
     INSTR(0x26, rolZero);
+    INSTR(0x28, plp);
     INSTR(0x29, andImm);
     INSTR(0x2a, rolAcc);
     INSTR(0x2c, bitAbs);
     INSTR(0x2d, andAbs);
     INSTR(0x2e, rolAbs);
     INSTR(0x30, bmi);
+    INSTR(0x31, andIndY);
+    INSTR(0x35, andZeroX);
+    INSTR(0x36, rolZeroX);
     INSTR(0x38, sec);
     INSTR(0x39, andAbsY);
     INSTR(0x3d, andAbsX);
+    INSTR(0x3e, rolAbsX);
     INSTR(0x40, rti);
+    INSTR(0x41, eorIndX);
     INSTR(0x45, eorZero);
     INSTR(0x46, lsrZero);
     INSTR(0x48, pha);
     INSTR(0x49, eorImm);
     INSTR(0x4a, lsrAcc);
     INSTR(0x4c, jmpAbs);
+    INSTR(0x4d, eorAbs);
     INSTR(0x4e, lsrAbs);
+    INSTR(0x50, bvc);
+    INSTR(0x51, eorIndY);
+    INSTR(0x55, eorZeroX);
+    INSTR(0x56, lsrZeroX);
+    INSTR(0x59, eorAbsY);
+    INSTR(0x5d, eorAbsX);
+    INSTR(0x5e, lsrAbsX);
     INSTR(0x60, rts);
+    INSTR(0x61, adcIndX);
     INSTR(0x65, adcZero);
+    INSTR(0x66, rorZero);
     INSTR(0x68, pla);
     INSTR(0x69, adcImm);
     INSTR(0x6a, rorAcc);
     INSTR(0x6c, jmpInd);
     INSTR(0x6d, adcAbs);
+    INSTR(0x6e, rorAbs);
+    INSTR(0x70, bvs);
+    INSTR(0x71, adcIndY);
     INSTR(0x75, adcZeroX);
+    INSTR(0x76, rorZeroX);
     INSTR(0x78, sei);
     INSTR(0x79, adcAbsY);
     INSTR(0x7d, adcAbsX);
     INSTR(0x7e, rorAbsX);
+    INSTR(0x81, staIndX);
     INSTR(0x84, styZero);
     INSTR(0x85, staZero);
     INSTR(0x86, stxZero);
@@ -155,12 +184,15 @@ void Cpu::buildInstructionTable()
     INSTR(0x8e, stxAbs);
     INSTR(0x90, bcc);
     INSTR(0x91, staIndY);
+    INSTR(0x94, styZeroX);
     INSTR(0x95, staZeroX);
+    INSTR(0x96, stxZeroY);
     INSTR(0x98, tya);
     INSTR(0x99, staAbsY);
     INSTR(0x9a, txs);
     INSTR(0x9d, staAbsX);
     INSTR(0xa0, ldyImm);
+    INSTR(0xa1, ldaIndX);
     INSTR(0xa2, ldxImm);
     INSTR(0xa4, ldyZero);
     INSTR(0xa5, ldaZero);
@@ -173,34 +205,53 @@ void Cpu::buildInstructionTable()
     INSTR(0xae, ldxAbs);
     INSTR(0xb0, bcs);
     INSTR(0xb1, ldaIndY);
+    INSTR(0xb4, ldyZeroX);
     INSTR(0xb5, ldaZeroX);
+    INSTR(0xb6, ldxZeroY);
+    INSTR(0xb8, clv);
     INSTR(0xb9, ldaAbsY);
+    INSTR(0xba, tsx);
     INSTR(0xbc, ldyAbsX);
     INSTR(0xbd, ldaAbsX);
     INSTR(0xbe, ldxAbsY);
     INSTR(0xc0, cpyImm);
+    INSTR(0xc1, cmpIndX);
+    INSTR(0xc4, cpyZero);
     INSTR(0xc5, cmpZero);
     INSTR(0xc6, decZero);
     INSTR(0xc8, iny);
     INSTR(0xc9, cmpImm);
     INSTR(0xca, dex);
+    INSTR(0xcc, cpyAbs);
     INSTR(0xcd, cmpAbs);
     INSTR(0xce, decAbs);
     INSTR(0xd0, bne);
+    INSTR(0xd1, cmpIndY);
     INSTR(0xd5, cmpZeroX);
+    INSTR(0xd6, decZeroX);
     INSTR(0xd8, cld);
     INSTR(0xd9, cmpAbsY);
     INSTR(0xdd, cmpAbsX);
     INSTR(0xde, decAbsX);
     INSTR(0xe0, cpxImm);
+    INSTR(0xe1, sbcIndX);
+    INSTR(0xe4, cpxZero);
+    INSTR(0xe5, sbcZero);
     INSTR(0xe6, incZero);
     INSTR(0xe8, inx);
     INSTR(0xe9, sbcImm);
+    INSTR(0xea, nop);
+    INSTR(0xec, cpxAbs);
     INSTR(0xed, sbcAbs);
     INSTR(0xee, incAbs);
     INSTR(0xf0, beq);
+    INSTR(0xf1, sbcIndY);
     INSTR(0xf5, sbcZeroX);
+    INSTR(0xf6, incZeroX);
+    INSTR(0xf8, sed);
     INSTR(0xf9, sbcAbsY);
+    INSTR(0xfd, sbcAbsX);
+    INSTR(0xfe, incAbsX);
 
 #undef INSTR
 }
@@ -239,6 +290,74 @@ uint8_t Cpu::pop8()
 }
 
 // =====================================================================================================================
+uint8_t Cpu::addrZero()
+{
+    return read8();
+}
+
+// =====================================================================================================================
+uint8_t Cpu::addrZeroX(uint8_t& offset)
+{
+    offset = read8();
+    return offset + m_X;
+}
+// =====================================================================================================================
+uint8_t Cpu::addrZeroY(uint8_t& offset)
+{
+    offset = read8();
+    return offset + m_Y;
+}
+
+// =====================================================================================================================
+uint16_t Cpu::addrAbsolute()
+{
+    return read16();
+}
+
+// =====================================================================================================================
+uint16_t Cpu::addrAbsoluteX(uint16_t& abs)
+{
+    abs = read16();
+    return abs + m_X;
+}
+
+// =====================================================================================================================
+uint16_t Cpu::addrAbsoluteY(uint16_t& abs)
+{
+    abs = read16();
+    return abs + m_Y;
+}
+
+// =====================================================================================================================
+uint16_t Cpu::addrIndirectX(uint8_t& offset)
+{
+    uint8_t off = read8();
+    off += m_X;
+    offset = off;
+
+    uint16_t addr;
+    addr = m_memory.read(off);
+    ++off;
+    addr |= (m_memory.read(off) << 8);
+
+    return addr;
+}
+
+// =====================================================================================================================
+uint16_t Cpu::addrIndirectY(uint8_t& offset)
+{
+    uint8_t off = read8();
+    offset = off;
+
+    uint16_t addr;
+    addr = m_memory.read(off);
+    ++off;
+    addr |= (m_memory.read(off) << 8);
+
+    return addr + m_Y;
+}
+
+// =====================================================================================================================
 void Cpu::setOrClearStatus(uint8_t flagMask, bool condition)
 {
     if (condition)
@@ -260,69 +379,9 @@ void Cpu::updateSign(uint8_t value)
 }
 
 // =====================================================================================================================
-void Cpu::bpl()
-{
-    traceInstruction("BPL");
-
-    int8_t off = static_cast<int8_t>(read8());
-    if ((m_status & Sign) == 0)
-	m_PC += off;
-}
-
-// =====================================================================================================================
-void Cpu::bcs()
-{
-    traceInstruction("BCS");
-
-    int8_t off = static_cast<int8_t>(read8());
-    if (m_status & Carry)
-	m_PC += off;
-}
-
-// =====================================================================================================================
-void Cpu::bne()
-{
-    int8_t off = static_cast<int8_t>(read8());
-    traceInstruction(MakeString() << "BNE " << (int)off);
-
-    if ((m_status & Zero) == 0)
-	m_PC += off;
-}
-
-// =====================================================================================================================
-void Cpu::beq()
-{
-    int8_t off = static_cast<int8_t>(read8());
-    traceInstruction(MakeString() << "BEQ " << (int)off);
-
-    if (m_status & Zero)
-	m_PC += off;
-}
-
-// =====================================================================================================================
-void Cpu::bcc()
-{
-    traceInstruction("BCC");
-
-    int8_t off = static_cast<int8_t>(read8());
-    if ((m_status & Carry) == 0)
-	m_PC += off;
-}
-
-// =====================================================================================================================
-void Cpu::bmi()
-{
-    traceInstruction("BMI");
-
-    int8_t off = static_cast<int8_t>(read8());
-    if (m_status & Sign)
-	m_PC += off;
-}
-
-// =====================================================================================================================
 void Cpu::jmpAbs()
 {
-    m_PC = read16();
+    m_PC = addrAbsolute();
     traceInstruction(MakeString() << "JMP $" << std::hex << std::setw(4) << std::setfill('0') << m_PC);
 }
 
@@ -331,14 +390,20 @@ void Cpu::jmpInd()
 {
     uint16_t addr = read16();
     traceInstruction(MakeString() << "JMP ($" << std::hex << std::setw(4) << std::setfill('0') << addr << ")");
-    m_PC = m_memory.read(addr) | (m_memory.read(addr + 1) << 8);
+
+    // implement the buggy way how indirect jump works in the 6502, lol :-]
+    uint16_t addr2 = addr + 1;
+    if ((addr & 0xff) == 0xff)
+	addr2 -= 0x100;
+
+    m_PC = m_memory.read(addr) | (m_memory.read(addr2) << 8);
 }
 
 // =====================================================================================================================
 void Cpu::jsrAbs()
 {
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "JSR $" << std::hex << std::setw(4) << std::setfill('0') << addr);
+    uint16_t addr = addrAbsolute();
+    traceInstruction(MakeString(true) << "JSR $" << std::setw(4) << std::setfill('0') << addr);
 
     // push the old PC-1 to the stack
     uint16_t pc = m_PC - 1;
@@ -365,54 +430,25 @@ void Cpu::rti()
     traceInstruction("RTI");
 
     // do some sanity checking
-    if (!m_inInterrupt)
-	throw CpuException("executed RTI without being in an interrupt");
+    //if (!m_inInterrupt)
+    //	throw CpuException("executed RTI without being in an interrupt");
 
     // restore status
-    m_status = pop8();
+    m_status = pop8() | Always1;
     // restore PC
     m_PC = pop8() | (pop8() << 8);
 
     // enable interrupts
-    m_status &= IntDisable;
+    //m_status &= ~IntDisable;
 
     // we are not handling an interrupt anymore
     m_inInterrupt = false;
 }
 
 // =====================================================================================================================
-void Cpu::sei()
+void Cpu::nop()
 {
-    traceInstruction("SEI");
-    m_status |= IntDisable;
-}
-
-// =====================================================================================================================
-void Cpu::cld()
-{
-    traceInstruction("CLD");
-    m_status &= ~Decimal;
-}
-
-// =====================================================================================================================
-void Cpu::sec()
-{
-    traceInstruction("SEC");
-    m_status |= Carry;
-}
-
-// =====================================================================================================================
-void Cpu::clc()
-{
-    traceInstruction("CLC");
-    m_status &= ~Carry;
-}
-
-// =====================================================================================================================
-void Cpu::txs()
-{
-    traceInstruction("TXS");
-    m_SP = m_X;
+    traceInstruction("NOP");
 }
 
 // =====================================================================================================================
@@ -452,87 +488,6 @@ void Cpu::tay()
 }
 
 // =====================================================================================================================
-void Cpu::pha()
-{
-    traceInstruction("PHA");
-    push8(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::pla()
-{
-    traceInstruction("PLA");
-    m_A = pop8();
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::incZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "INC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-
-    uint8_t data = m_memory.read(addr);
-    ++data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::incAbs()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "INC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-
-    uint8_t data = m_memory.read(addr);
-    ++data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::decZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "DEC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-
-    uint8_t data = m_memory.read(addr);
-    --data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::decAbs()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "DEC $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-
-    uint8_t data = m_memory.read(addr);
-    --data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::decAbsX()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "DEC $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",X");
-
-    uint8_t data = m_memory.read(addr + m_X);
-    --data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data + m_X);
-}
-
-// =====================================================================================================================
 void Cpu::inx()
 {
     traceInstruction("INX");
@@ -548,61 +503,6 @@ void Cpu::dex()
     --m_X;
     updateZero(m_X);
     updateSign(m_X);
-}
-
-// =====================================================================================================================
-void Cpu::ldxImm()
-{
-    m_X = read8();
-    updateZero(m_X);
-    updateSign(m_X);
-    traceInstruction(MakeString() << "LDX #$" << std::hex << std::setw(2) << std::setfill('0') << (int)m_X);
-}
-
-// =====================================================================================================================
-void Cpu::ldxZero()
-{
-    uint16_t abs = read8();
-    traceInstruction(MakeString() << "LDX $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_X = m_memory.read(abs);
-    updateZero(m_X);
-    updateSign(m_X);
-}
-
-// =====================================================================================================================
-void Cpu::ldxAbs()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "LDX $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_X = m_memory.read(abs);
-    updateZero(m_X);
-    updateSign(m_X);
-}
-
-// =====================================================================================================================
-void Cpu::ldxAbsY()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "LDX $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",Y");
-    m_X = m_memory.read(abs + m_Y);
-    updateZero(m_X);
-    updateSign(m_X);
-}
-
-// =====================================================================================================================
-void Cpu::stxZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "STX $" << std::hex << std::setw(2) << std::setfill('0') << addr);
-    m_memory.write(addr, m_X);
-}
-
-// =====================================================================================================================
-void Cpu::stxAbs()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "STX $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    m_memory.write(addr, m_X);
 }
 
 // =====================================================================================================================
@@ -624,104 +524,9 @@ void Cpu::dey()
 }
 
 // =====================================================================================================================
-void Cpu::ldyImm()
-{
-    m_Y = read8();
-    updateZero(m_Y);
-    updateSign(m_Y);
-    traceInstruction(MakeString() << "LDY #$" << std::hex << std::setw(2) << std::setfill('0') << (int)m_Y);
-}
-
-// =====================================================================================================================
-void Cpu::ldyZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "LDY $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    m_Y = m_memory.read(addr);
-    updateZero(m_Y);
-    updateSign(m_Y);
-}
-
-// =====================================================================================================================
-void Cpu::ldyAbs()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "LDY $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_Y = m_memory.read(abs);
-    updateZero(m_Y);
-    updateSign(m_Y);
-}
-
-// =====================================================================================================================
-void Cpu::ldyAbsX()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "LDY $" << std::hex << std::setw(4) << std::setfill('0') << abs << ",X");
-    m_Y = m_memory.read(abs + m_X);
-    updateZero(m_Y);
-    updateSign(m_Y);
-}
-
-// =====================================================================================================================
-void Cpu::styZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "STY $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    m_memory.write(addr, m_Y);
-}
-
-// =====================================================================================================================
-void Cpu::styAbs()
-{
-    uint16_t abs = read16();
-    traceInstruction(MakeString() << "STY $" << std::hex << std::setw(4) << std::setfill('0') << abs);
-    m_memory.write(abs, m_Y);
-}
-
-// =====================================================================================================================
-void Cpu::eorImm()
-{
-    uint8_t imm = read8();
-    m_A ^= imm;
-    updateZero(m_A);
-    updateSign(m_A);
-    traceInstruction(MakeString() << "EOR #$" << std::hex << std::setw(2) << std::setfill('0') << imm);
-}
-
-// =====================================================================================================================
-void Cpu::eorZero()
-{
-    uint16_t addr = read8();
-    m_A ^= m_memory.read(addr);
-    updateZero(m_A);
-    updateSign(m_A);
-    traceInstruction(MakeString() << "EOR $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-}
-
-// =====================================================================================================================
-void Cpu::cpxImm()
-{
-    uint8_t imm = read8();
-    setOrClearStatus(Carry, m_X >= imm);
-    setOrClearStatus(Zero, m_X == imm);
-    setOrClearStatus(Sign, m_X < imm);
-    traceInstruction(MakeString() << "CPX #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-}
-
-// =====================================================================================================================
-void Cpu::cpyImm()
-{
-    uint8_t imm = read8();
-    setOrClearStatus(Carry, m_Y >= imm);
-    setOrClearStatus(Zero, m_Y == imm);
-    setOrClearStatus(Sign, m_Y < imm);
-    traceInstruction(MakeString() << "CPY #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
-}
-
-// =====================================================================================================================
 void Cpu::bitZero()
 {
-    uint16_t addr = read8();
+    uint16_t addr = addrZero();
     traceInstruction(MakeString() << "BIT $" << std::hex << std::setw(4) << std::setfill('0') << addr);
 
     uint8_t data = m_memory.read(addr);
@@ -733,127 +538,11 @@ void Cpu::bitZero()
 // =====================================================================================================================
 void Cpu::bitAbs()
 {
-    uint16_t addr = read16();
+    uint16_t addr = addrAbsolute();
     traceInstruction(MakeString() << "BIT $" << std::hex << std::setw(4) << std::setfill('0') << addr);
 
     uint8_t data = m_memory.read(addr);
     setOrClearStatus(Sign, ((data >> 7) & 1) == 1);
     setOrClearStatus(Overflow, ((data >> 6) & 1) == 1);
     updateZero(m_A & data);
-}
-
-// =====================================================================================================================
-void Cpu::lsrAcc()
-{
-    traceInstruction("LSR");
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (m_A & 0x1) == 1);
-    m_A >>= 1;
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::lsrZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "LSR $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    uint8_t data = m_memory.read(addr);
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (data & 0x1) == 1);
-    data >>= 1;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::lsrAbs()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "LSR $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    uint8_t data = m_memory.read(addr);
-    // bit #0 is shifted into carry
-    setOrClearStatus(Carry, (data & 0x1) == 1);
-    data >>= 1;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::rolAcc()
-{
-    traceInstruction("ROL");
-    // bit #0 is shifted into carry
-    bool setCarry = m_A & 0x80;
-    m_A <<= 1;
-    if (m_status & Carry)
-	m_A |= 1;
-    setOrClearStatus(Carry, setCarry);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::rolZero()
-{
-    uint16_t addr = read8();
-    traceInstruction(MakeString() << "ROL $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    uint8_t data = m_memory.read(addr);
-    // bit #0 is shifted into carry
-    bool setCarry = data & 0x80;
-    data <<= 1;
-    if (m_status & Carry)
-	data |= 1;
-    setOrClearStatus(Carry, setCarry);
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::rolAbs()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << "ROL $" << std::hex << std::setw(4) << std::setfill('0') << addr);
-    uint8_t data = m_memory.read(addr);
-    // bit #0 is shifted into carry
-    bool setCarry = data & 0x80;
-    data <<= 1;
-    if (m_status & Carry)
-	data |= 1;
-    setOrClearStatus(Carry, setCarry);
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(addr, data);
-}
-
-// =====================================================================================================================
-void Cpu::rorAcc()
-{
-    traceInstruction("ROR");
-    bool setCarry = (m_A & 0x1) == 1;
-    m_A >>= 1;
-    if (m_status & Carry)
-	m_A |= 0x80;
-    setOrClearStatus(Carry, setCarry);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::rorAbsX()
-{
-    uint16_t addr = read16();
-    traceInstruction(MakeString() << " ROR $" << std::hex << std::setw(4) << std::setfill('0') << addr << ",X");
-    uint8_t data = m_memory.read(addr + m_X);
-    bool setCarry = (data & 0x1) == 1;
-    data >>= 1;
-    if (m_status & Carry)
-	data |= 0x80;
-    setOrClearStatus(Carry, setCarry);
-    m_memory.write(addr + m_X, data);
-    updateZero(data);
-    updateSign(data);
 }

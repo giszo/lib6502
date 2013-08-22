@@ -8,93 +8,94 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::ldaImm()
+void Cpu::eorImm()
 {
-    m_A = read8();
-    traceInstruction(MakeString(true) << "LDA #$" << std::setw(2) << std::setfill('0') << (int)m_A);
+    uint8_t imm = read8();
+    traceInstruction(MakeString(true) << "EOR #$" << std::setw(2) << std::setfill('0') << (int)imm);
 
+    m_A ^= imm;
     updateZero(m_A);
     updateSign(m_A);
 }
 
 // =====================================================================================================================
-void Cpu::ldaZero()
+void Cpu::eorZero()
 {
     uint16_t address = addrZero();
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(2) << std::setfill('0') << address);
+    traceInstruction(MakeString(true) << "EOR $" << std::setw(2) << std::setfill('0') << address);
 
-    m_A = m_memory.read(address);
+    m_A ^= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
 }
 
 // =====================================================================================================================
-void Cpu::ldaZeroX()
+void Cpu::eorZeroX()
 {
     uint8_t offset;
     uint16_t address = addrZeroX(offset);
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
+    traceInstruction(MakeString(true) << "EOR $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
 
-    m_A = m_memory.read(address);
+    m_A ^= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
 }
 
 // =====================================================================================================================
-void Cpu::ldaAbs()
+void Cpu::eorAbs()
 {
     uint16_t address = addrAbsolute();
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(4) << std::setfill('0') << address);
+    traceInstruction(MakeString(true) << "EOR $" << std::setw(4) << std::setfill('0') << address);
 
-    m_A = m_memory.read(address);
+    m_A ^= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
 }
 
 // =====================================================================================================================
-void Cpu::ldaAbsX()
+void Cpu::eorAbsX()
 {
     uint16_t abs;
     uint16_t address = addrAbsoluteX(abs);
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(4) << std::setfill('0') << abs << ",X");
+    traceInstruction(MakeString(true) << "EOR $" << std::setw(4) << std::setfill('0') << abs << ",X");
 
-    m_A = m_memory.read(address);
+    m_A ^= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
 }
 
 // =====================================================================================================================
-void Cpu::ldaAbsY()
+void Cpu::eorAbsY()
 {
     uint16_t abs;
     uint16_t address = addrAbsoluteY(abs);
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(4) << std::setfill('0') << abs << ",Y");
+    traceInstruction(MakeString(true) << "EOR $" << std::setw(4) << std::setfill('0') << abs << ",Y");
 
-    m_A = m_memory.read(address);
+    m_A ^= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
 }
 
 // =====================================================================================================================
-void Cpu::ldaIndX()
+void Cpu::eorIndX()
 {
     uint8_t offset;
     uint16_t address = addrIndirectX(offset);
-    traceInstruction(MakeString(true) << "LDA ($" << std::setw(2) << std::setfill('0') << (int)offset << ",X)");
+    traceInstruction(MakeString(true) << "EOR ($" << std::setw(2) << std::setfill('0') << (int)offset << ",X)");
 
-    m_A = m_memory.read(address);
+    m_A ^= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
 }
 
 // =====================================================================================================================
-void Cpu::ldaIndY()
+void Cpu::eorIndY()
 {
     uint8_t offset;
     uint16_t address = addrIndirectY(offset);
-    traceInstruction(MakeString(true) << "LDA ($" << std::setw(2) << std::setfill('0') << (int)offset << "),Y");
+    traceInstruction(MakeString(true) << "EOR $(" << std::setw(2) << std::setfill('0') << (int)offset << "),Y");
 
-    m_A = m_memory.read(address);
+    m_A ^= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
 }
