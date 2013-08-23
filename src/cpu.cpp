@@ -279,7 +279,17 @@ void Cpu::buildAddressingModeTable()
 void Cpu::traceInstruction(const std::string& instr, const std::string& param)
 {
     if (m_instrTracer)
-	m_instrTracer->trace(m_instrState, MakeString() << instr << " " << param);
+    {
+	std::string trace = instr;
+
+	if (!param.empty())
+	{
+	    trace += " ";
+	    trace += param;
+	}
+
+	m_instrTracer->trace(m_instrState, trace);
+    }
 }
 
 // =====================================================================================================================
@@ -383,7 +393,7 @@ Cpu::AddressingMode Cpu::getAddressingMode(uint8_t opCode)
 uint16_t Cpu::addrZero(std::string& trace)
 {
     uint8_t addr = read8();
-    trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << addr;
+    trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << (int)addr;
     return addr;
 }
 
@@ -391,7 +401,7 @@ uint16_t Cpu::addrZero(std::string& trace)
 uint16_t Cpu::addrZeroX(std::string& trace)
 {
     uint8_t addr = read8();
-    trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << addr << ",X";
+    trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << (int)addr << ",X";
     return (addr + m_X) & 0xff;
 }
 
@@ -399,7 +409,7 @@ uint16_t Cpu::addrZeroX(std::string& trace)
 uint16_t Cpu::addrZeroY(std::string& trace)
 {
     uint8_t addr = read8();
-    trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << addr << ",Y";
+    trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << (int)addr << ",Y";
     return (addr + m_Y) & 0xff;
 }
 
@@ -431,7 +441,7 @@ uint16_t Cpu::addrAbsoluteY(std::string& trace)
 uint16_t Cpu::addrIndirectX(std::string& trace)
 {
     uint8_t off = read8();
-    trace = MakeString(true) << "($" << std::setw(2) << std::setfill('0') << off << ",X)";
+    trace = MakeString(true) << "($" << std::setw(2) << std::setfill('0') << (int)off << ",X)";
 
     uint16_t addr;
     off += m_X;
@@ -446,7 +456,7 @@ uint16_t Cpu::addrIndirectX(std::string& trace)
 uint16_t Cpu::addrIndirectY(std::string& trace)
 {
     uint8_t off = read8();
-    trace = MakeString(true) << "$(" << std::setw(2) << std::setfill('0') << off << "),Y";
+    trace = MakeString(true) << "$(" << std::setw(2) << std::setfill('0') << (int)off << "),Y";
 
     uint16_t addr;
     addr = m_memory.read(off);
