@@ -8,50 +8,57 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::sei()
+unsigned Cpu::sei(uint8_t opCode)
 {
     traceInstruction("SEI");
     m_status |= IntDisable;
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::cli()
+unsigned Cpu::cli(uint8_t opCode)
 {
     traceInstruction("CLI");
     m_status &= ~IntDisable;
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::sed()
+unsigned Cpu::sed(uint8_t opCode)
 {
     traceInstruction("SED");
     m_status |= Decimal;
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::cld()
+unsigned Cpu::cld(uint8_t opCode)
 {
     traceInstruction("CLD");
     m_status &= ~Decimal;
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::sec()
+unsigned Cpu::sec(uint8_t opCode)
 {
     traceInstruction("SEC");
     m_status |= Carry;
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::clc()
+unsigned Cpu::clc(uint8_t opCode)
 {
     traceInstruction("CLC");
     m_status &= ~Carry;
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::clv()
+unsigned Cpu::clv(uint8_t opCode)
 {
     traceInstruction("CLV");
     m_status &= ~Overflow;
+    return 2;
 }

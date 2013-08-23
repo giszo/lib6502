@@ -8,93 +8,29 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::ldaImm()
+unsigned Cpu::ldaImm(uint8_t opCode)
 {
     m_A = read8();
-    traceInstruction(MakeString(true) << "LDA #$" << std::setw(2) << std::setfill('0') << (int)m_A);
+    traceInstruction("LDA", MakeString(true) << " #$" << std::setw(2) << std::setfill('0') << (int)m_A);
 
     updateZero(m_A);
     updateSign(m_A);
+
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::ldaZero()
+unsigned Cpu::ldaAddr(uint8_t opCode)
 {
-    uint16_t address = addrZero();
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(2) << std::setfill('0') << address);
+    std::string addrTrace;
+    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+
+    traceInstruction("LDA", addrTrace);
 
     m_A = m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
-}
 
-// =====================================================================================================================
-void Cpu::ldaZeroX()
-{
-    uint8_t offset;
-    uint16_t address = addrZeroX(offset);
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
-
-    m_A = m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaAbs()
-{
-    uint16_t address = addrAbsolute();
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(4) << std::setfill('0') << address);
-
-    m_A = m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaAbsX()
-{
-    uint16_t abs;
-    uint16_t address = addrAbsoluteX(abs);
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(4) << std::setfill('0') << abs << ",X");
-
-    m_A = m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaAbsY()
-{
-    uint16_t abs;
-    uint16_t address = addrAbsoluteY(abs);
-    traceInstruction(MakeString(true) << "LDA $" << std::setw(4) << std::setfill('0') << abs << ",Y");
-
-    m_A = m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaIndX()
-{
-    uint8_t offset;
-    uint16_t address = addrIndirectX(offset);
-    traceInstruction(MakeString(true) << "LDA ($" << std::setw(2) << std::setfill('0') << (int)offset << ",X)");
-
-    m_A = m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::ldaIndY()
-{
-    uint8_t offset;
-    uint16_t address = addrIndirectY(offset);
-    traceInstruction(MakeString(true) << "LDA ($" << std::setw(2) << std::setfill('0') << (int)offset << "),Y");
-
-    m_A = m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
+    // TODO
+    return 3;
 }

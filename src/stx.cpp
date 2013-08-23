@@ -8,26 +8,18 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::stxZero()
+unsigned Cpu::stx(uint8_t opCode)
 {
-    uint16_t addr = addrZero();
-    traceInstruction(MakeString(true) << "STX $" << std::setw(2) << std::setfill('0') << addr);
-    m_memory.write(addr, m_X);
-}
+    std::string addrTrace;
+    auto addrMode = getAddressingMode(opCode);
+    if (addrMode == ZeroPageX) addrMode = ZeroPageY;
+    else if (addrMode == AbsoluteX) addrMode = AbsoluteY;
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
-// =====================================================================================================================
-void Cpu::stxZeroY()
-{
-    uint8_t offset;
-    uint16_t addr = addrZeroY(offset);
-    traceInstruction(MakeString(true) << "STX $" << std::setw(2) << std::setfill('0') << (int)offset << ",Y");
-    m_memory.write(addr, m_X);
-}
+    traceInstruction("STX", addrTrace);
 
-// =====================================================================================================================
-void Cpu::stxAbs()
-{
-    uint16_t addr = addrAbsolute();
-    traceInstruction(MakeString(true) << "STX $" << std::setw(4) << std::setfill('0') << addr);
-    m_memory.write(addr, m_X);
+    m_memory.write(address, m_X);
+
+    // TODO
+    return 3;
 }

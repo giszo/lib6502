@@ -27,6 +27,7 @@ class CpuException : public std::runtime_error
  * Instructions are implemented according to the following documents:
  *   - http://www.6502.org/tutorials/6502opcodes.html
  *   - http://www.obelisk.demon.co.uk/6502/reference.html
+ *   - http://www.llx.com/~nparker/a2/opcodes.html
  */
 class Cpu
 {
@@ -78,11 +79,11 @@ class Cpu
 
 	void nmi();
 
-	void dumpState(std::ostream& s);
-
     private:
 	void buildInstructionTable();
-	void traceInstruction(const std::string& s);
+	void buildAddressingModeTable();
+
+	void traceInstruction(const std::string& instr, const std::string& param = "");
 
 	// reads a byte from the memory pointed by the PC and increments the PC
 	uint8_t read8();
@@ -97,14 +98,31 @@ class Cpu
 	void performInterrupt(uint16_t vectorBase);
 
 	// addressing helpers
-	uint8_t addrZero();
-	uint8_t addrZeroX(uint8_t& offset);
-	uint8_t addrZeroY(uint8_t& offset);
-	uint16_t addrAbsolute();
-	uint16_t addrAbsoluteX(uint16_t& abs);
-	uint16_t addrAbsoluteY(uint16_t& abs);
-	uint16_t addrIndirectX(uint8_t& offset);
-	uint16_t addrIndirectY(uint8_t& offfset);
+
+	enum AddressingMode
+	{
+	    Immediate,
+	    ZeroPage,
+	    ZeroPageX,
+	    ZeroPageY,
+	    Absolute,
+	    AbsoluteX,
+	    AbsoluteY,
+	    IndirectX,
+	    IndirectY
+	};
+
+	// returns the addressing mode of the given instruction
+	AddressingMode getAddressingMode(uint8_t opCode);
+
+	uint16_t addrZero(std::string& trace);
+	uint16_t addrZeroX(std::string& trace);
+	uint16_t addrZeroY(std::string& trace);
+	uint16_t addrAbsolute(std::string& trace);
+	uint16_t addrAbsoluteX(std::string& trace);
+	uint16_t addrAbsoluteY(std::string& trace);
+	uint16_t addrIndirectX(std::string& trace);
+	uint16_t addrIndirectY(std::string& trace);
 
 	// sets or clears the mask on the status register regarding the given condition (true -> set, false -> clear)
 	void setOrClearStatus(uint8_t flagMask, bool condition);
@@ -112,188 +130,102 @@ class Cpu
 	void updateZero(uint8_t value);
 	void updateSign(uint8_t value);
 
-	void bpl();
-	void bcs();
-	void bne();
-	void beq();
-	void bcc();
-	void bmi();
-	void bvc();
-	void bvs();
+	unsigned bpl(uint8_t opCode);
+	unsigned bcs(uint8_t opCode);
+	unsigned bne(uint8_t opCode);
+	unsigned beq(uint8_t opCode);
+	unsigned bcc(uint8_t opCode);
+	unsigned bmi(uint8_t opCode);
+	unsigned bvc(uint8_t opCode);
+	unsigned bvs(uint8_t opCode);
 
-	void jmpAbs();
-	void jmpInd();
-	void jsrAbs();
-	void rts();
-	void rti();
-	void brk();
+	unsigned jmpAbs(uint8_t opCode);
+	unsigned jmpInd(uint8_t opCode);
+	unsigned jsrAbs(uint8_t opCode);
+	unsigned rts(uint8_t opCode);
+	unsigned rti(uint8_t opCode);
+	unsigned brk(uint8_t opCode);
 
-	void nop();
-	void dop();
+	unsigned nop(uint8_t opCode);
+	unsigned dop(uint8_t opCode);
 
-	void sei();
-	void cli();
-	void sed();
-	void cld();
-	void sec();
-	void clc();
-	void clv();
+	unsigned sei(uint8_t opCode);
+	unsigned cli(uint8_t opCode);
+	unsigned sed(uint8_t opCode);
+	unsigned cld(uint8_t opCode);
+	unsigned sec(uint8_t opCode);
+	unsigned clc(uint8_t opCode);
+	unsigned clv(uint8_t opCode);
 
 	// stack instructions
-	void txs();
-	void tsx();
-	void pha();
-	void pla();
-	void php();
-	void plp();
+	unsigned txs(uint8_t opCode);
+	unsigned tsx(uint8_t opCode);
+	unsigned pha(uint8_t opCode);
+	unsigned pla(uint8_t opCode);
+	unsigned php(uint8_t opCode);
+	unsigned plp(uint8_t opCode);
 
-	void txa();
-	void tax();
-	void tya();
-	void tay();
+	unsigned txa(uint8_t opCode);
+	unsigned tax(uint8_t opCode);
+	unsigned tya(uint8_t opCode);
+	unsigned tay(uint8_t opCode);
 
-	void incZero();
-	void incZeroX();
-	void incAbs();
-	void incAbsX();
+	unsigned inc(uint8_t opCode);
+	unsigned dec(uint8_t opCode);
 
-	void decZero();
-	void decZeroX();
-	void decAbs();
-	void decAbsX();
+	unsigned inx(uint8_t opCode);
+	unsigned dex(uint8_t opCode);
 
-	void inx();
-	void dex();
+	unsigned ldxImm(uint8_t opCode);
+	unsigned ldxAddr(uint8_t opCode);
+	unsigned stx(uint8_t opCode);
 
-	void ldxImm();
-	void ldxZero();
-	void ldxZeroY();
-	void ldxAbs();
-	void ldxAbsY();
+	unsigned iny(uint8_t opCode);
+	unsigned dey(uint8_t opCode);
 
-	void stxZero();
-	void stxZeroY();
-	void stxAbs();
-
-	void iny();
-	void dey();
-
-	void ldyImm();
-	void ldyZero();
-	void ldyZeroX();
-	void ldyAbs();
-	void ldyAbsX();
-
-	void styZero();
-	void styZeroX();
-	void styAbs();
+	unsigned ldyImm(uint8_t opCode);
+	unsigned ldyAddr(uint8_t opCode);
+	unsigned sty(uint8_t opCode);
 
 	// ORA (bitwise OR with Accumulator)
-	void oraImm();
-	void oraZero();
-	void oraZeroX();
-	void oraAbs();
-	void oraAbsX();
-	void oraAbsY();
-	void oraIndX();
-	void oraIndY();
+	unsigned oraImm(uint8_t opCode);
+	unsigned oraAddr(uint8_t opCode);
 
-	void eorImm();
-	void eorZero();
-	void eorZeroX();
-	void eorAbs();
-	void eorAbsX();
-	void eorAbsY();
-	void eorIndX();
-	void eorIndY();
+	unsigned eorImm(uint8_t opCode);
+	unsigned eorAddr(uint8_t opCode);
 
-	void andImm();
-	void andZero();
-	void andZeroX();
-	void andAbs();
-	void andAbsX();
-	void andAbsY();
-	void andIndX();
-	void andIndY();
+	unsigned andImm(uint8_t opCode);
+	unsigned andAddr(uint8_t opCode);
 
-	void ldaImm();
-	void ldaZero();
-	void ldaZeroX();
-	void ldaAbs();
-	void ldaAbsX();
-	void ldaAbsY();
-	void ldaIndX();
-	void ldaIndY();
+	unsigned ldaImm(uint8_t opCode);
+	unsigned ldaAddr(uint8_t opCode);
+	unsigned sta(uint8_t opCode);
 
-	void adcImm();
-	void adcZero();
-	void adcZeroX();
-	void adcAbs();
-	void adcAbsX();
-	void adcAbsY();
-	void adcIndX();
-	void adcIndY();
+	unsigned adcImm(uint8_t opCode);
+	unsigned adcAddr(uint8_t opCode);
+	unsigned sbcImm(uint8_t opCode);
+	unsigned sbcAddr(uint8_t opCode);
 
-	void sbcImm();
-	void sbcZero();
-	void sbcZeroX();
-	void sbcAbs();
-	void sbcAbsX();
-	void sbcAbsY();
-	void sbcIndX();
-	void sbcIndY();
+	unsigned cpxImm(uint8_t opCode);
+	unsigned cpxAddr(uint8_t opCode);
 
-	void staZero();
-	void staZeroX();
-	void staAbs();
-	void staAbsX();
-	void staAbsY();
-	void staIndX();
-	void staIndY();
+	unsigned cpyImm(uint8_t opCode);
+	unsigned cpyAddr(uint8_t opCode);
 
-	void cpxImm();
-	void cpxZero();
-	void cpxAbs();
+	unsigned cmpImm(uint8_t opCode);
+	unsigned cmpAddr(uint8_t opCode);
 
-	void cpyImm();
-	void cpyZero();
-	void cpyAbs();
+	unsigned bit(uint8_t opCode);
 
-	void cmpImm();
-	void cmpZero();
-	void cmpZeroX();
-	void cmpAbs();
-	void cmpAbsX();
-	void cmpAbsY();
-	void cmpIndX();
-	void cmpIndY();
+	unsigned aslAcc(uint8_t opCode);
+	unsigned aslAddr(uint8_t opCode);
+	unsigned lsrAcc(uint8_t opCode);
+	unsigned lsrAddr(uint8_t opCode);
 
-	void bitZero();
-	void bitAbs();
-
-	void aslAcc();
-	void aslZero();
-	void aslZeroX();
-	void aslAbs();
-	void aslAbsX();
-
-	void lsrAcc();
-	void lsrZero();
-	void lsrZeroX();
-	void lsrAbs();
-	void lsrAbsX();
-
-	void rolAcc();
-	void rolZero();
-	void rolZeroX();
-	void rolAbs();
-	void rolAbsX();
-
-	void rorAcc();
-	void rorZero();
-	void rorZeroX();
-	void rorAbs();
-	void rorAbsX();
+	unsigned rolAcc(uint8_t opCode);
+	unsigned rolAddr(uint8_t opCode);
+	unsigned rorAcc(uint8_t opCode);
+	unsigned rorAddr(uint8_t opCode);
 
     private:
 	// the actual state of the CPU
@@ -303,7 +235,13 @@ class Cpu
 	// reference to the memory used by the CPU
 	Memory& m_memory;
 
-	std::function<void()> m_instrTable[256];
+	// instruction table
+	typedef std::function<unsigned (uint8_t)> TInstruction;
+	TInstruction m_instrTable[256];
+
+	// addressing mode table
+	typedef std::function<uint16_t(std::string&)> TAddressingMode;
+	TAddressingMode m_addrModeTable[9];
 
 	InstructionTracer* m_instrTracer;
 };

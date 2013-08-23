@@ -8,57 +8,32 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::ldxImm()
+unsigned Cpu::ldxImm(uint8_t opCode)
 {
     m_X = read8();
-    traceInstruction(MakeString(true) << "LDX #$" << std::setw(2) << std::setfill('0') << (int)m_X);
+    traceInstruction("LDX", MakeString(true) << "#$" << std::setw(2) << std::setfill('0') << (int)m_X);
 
     updateZero(m_X);
     updateSign(m_X);
+
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::ldxZero()
+unsigned Cpu::ldxAddr(uint8_t opCode)
 {
-    uint16_t abs = addrZero();
-    traceInstruction(MakeString(true) << "LDX $" << std::setw(4) << std::setfill('0') << abs);
+    std::string addrTrace;
+    auto addrMode = getAddressingMode(opCode);
+    if (addrMode == ZeroPageX) addrMode = ZeroPageY;
+    else if (addrMode == AbsoluteX) addrMode = AbsoluteY;
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
-    m_X = m_memory.read(abs);
-    updateZero(m_X);
-    updateSign(m_X);
-}
-
-// =====================================================================================================================
-void Cpu::ldxZeroY()
-{
-    uint8_t offset;
-    uint16_t address = addrZeroY(offset);
-    traceInstruction(MakeString(true) << "LDX $" << std::setw(4) << std::setfill('0') << (int)offset << ",Y");
+    traceInstruction("LDX", addrTrace);
 
     m_X = m_memory.read(address);
     updateZero(m_X);
     updateSign(m_X);
-}
 
-// =====================================================================================================================
-void Cpu::ldxAbs()
-{
-    uint16_t abs = addrAbsolute();
-    traceInstruction(MakeString(true) << "LDX $" << std::setw(4) << std::setfill('0') << abs);
-
-    m_X = m_memory.read(abs);
-    updateZero(m_X);
-    updateSign(m_X);
-}
-
-// =====================================================================================================================
-void Cpu::ldxAbsY()
-{
-    uint16_t abs;
-    uint16_t addr = addrAbsoluteY(abs);
-    traceInstruction(MakeString(true) << "LDX $" << std::setw(4) << std::setfill('0') << abs << ",Y");
-
-    m_X = m_memory.read(addr);
-    updateZero(m_X);
-    updateSign(m_X);
+    // TODO
+    return 3;
 }

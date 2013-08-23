@@ -8,55 +8,19 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::incZero()
+unsigned Cpu::inc(uint8_t opCode)
 {
-    uint16_t address = addrZero();
-    traceInstruction(MakeString(true) << "INC $" << std::setw(2) << std::setfill('0') << address);
+    std::string addrTrace;
+    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+
+    traceInstruction("INC", addrTrace);
 
     uint8_t data = m_memory.read(address);
     ++data;
     updateZero(data);
     updateSign(data);
     m_memory.write(address, data);
-}
 
-// =====================================================================================================================
-void Cpu::incZeroX()
-{
-    uint8_t offset;
-    uint16_t address = addrZeroX(offset);
-    traceInstruction(MakeString(true) << "INC $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
-
-    uint8_t data = m_memory.read(address);
-    ++data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(address, data);
-}
-
-// =====================================================================================================================
-void Cpu::incAbs()
-{
-    uint16_t address = addrAbsolute();
-    traceInstruction(MakeString(true) << "INC $" << std::setw(4) << std::setfill('0') << address);
-
-    uint8_t data = m_memory.read(address);
-    ++data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(address, data);
-}
-
-// =====================================================================================================================
-void Cpu::incAbsX()
-{
-    uint16_t abs;
-    uint16_t address = addrAbsoluteX(abs);
-    traceInstruction(MakeString(true) << "INC $" << std::setw(4) << std::setfill('0') << abs << ",X");
-
-    uint8_t data = m_memory.read(address);
-    ++data;
-    updateZero(data);
-    updateSign(data);
-    m_memory.write(address, data);
+    // TODO
+    return 5;
 }

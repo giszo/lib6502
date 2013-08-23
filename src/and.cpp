@@ -8,94 +8,30 @@
 using lib6502::Cpu;
 
 // =====================================================================================================================
-void Cpu::andImm()
+unsigned Cpu::andImm(uint8_t opCode)
 {
     uint8_t imm = read8();
-    traceInstruction(MakeString(true) << "AND #$" << std::setw(2) << std::setfill('0') << (int)imm);
+    traceInstruction("AND", MakeString(true) << " #$" << std::setw(2) << std::setfill('0') << (int)imm);
 
     m_A &= imm;
     updateZero(m_A);
     updateSign(m_A);
+
+    return 2;
 }
 
 // =====================================================================================================================
-void Cpu::andZero()
+unsigned Cpu::andAddr(uint8_t opCode)
 {
-    uint16_t address = addrZero();
-    traceInstruction(MakeString(true) << "AND $" << std::setw(2) << std::setfill('0') << address);
+    std::string addrTrace;
+    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+
+    traceInstruction("AND", addrTrace);
 
     m_A &= m_memory.read(address);
     updateZero(m_A);
     updateSign(m_A);
-}
 
-// =====================================================================================================================
-void Cpu::andZeroX()
-{
-    uint8_t offset;
-    uint16_t address = addrZeroX(offset);
-    traceInstruction(MakeString(true) << "AND $" << std::setw(2) << std::setfill('0') << (int)offset << ",X");
-
-    m_A &= m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::andAbs()
-{
-    uint16_t address = addrAbsolute();
-    traceInstruction(MakeString(true) << "AND $" << std::setw(4) << std::setfill('0') << address);
-
-    m_A &= m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::andAbsX()
-{
-    uint16_t abs;
-    uint16_t address = addrAbsoluteX(abs);
-    traceInstruction(MakeString(true) << "AND $" << std::setw(4) << std::setfill('0') << abs << ",X");
-
-    m_A &= m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::andAbsY()
-{
-    uint16_t abs;
-    uint16_t address = addrAbsoluteY(abs);
-    traceInstruction(MakeString(true) << "AND $" << std::setw(4) << std::setfill('0') << abs << ",Y");
-
-    m_A &= m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::andIndX()
-{
-    uint8_t offset;
-    uint16_t address = addrIndirectX(offset);
-    traceInstruction(MakeString(true) << "AND ($" << std::setw(2) << std::setfill('0') << (int)offset << ",X)");
-
-    m_A &= m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
-}
-
-// =====================================================================================================================
-void Cpu::andIndY()
-{
-    uint8_t offset;
-    uint16_t address = addrIndirectY(offset);
-    traceInstruction(MakeString(true) << "AND $(" << std::setw(2) << std::setfill('0') << (int)offset << "),Y");
-
-    m_A &= m_memory.read(address);
-    updateZero(m_A);
-    updateSign(m_A);
+    // TODO
+    return 3;
 }
