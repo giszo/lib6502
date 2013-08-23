@@ -68,6 +68,7 @@ void Cpu::tick()
 void Cpu::reset()
 {
     m_PC = (m_memory.read(0xfffd) << 8) | m_memory.read(0xfffc);
+    m_SP = 0xfd;
     m_status = Always1 | IntDisable;
     m_inInterrupt = false;
 }
@@ -75,19 +76,7 @@ void Cpu::reset()
 // =====================================================================================================================
 void Cpu::nmi()
 {
-    m_inInterrupt = true;
-
-    // save the current PC
-    push8(m_PC >> 8);
-    push8(m_PC & 0xff);
-    // save the status
-    push8(m_status);
-
-    // disable interrupts
-    m_status |= IntDisable;
-
-    // read the NMI vector
-    m_PC = (m_memory.read(0xfffb) << 8) | m_memory.read(0xfffa);
+    performInterrupt(0xfffa);
 }
 
 // =====================================================================================================================
@@ -103,7 +92,9 @@ void Cpu::buildInstructionTable()
 #define INSTR(code, func) \
     m_instrTable[code] = std::bind(&Cpu::func, this)
 
+    INSTR(0x00, brk);
     INSTR(0x01, oraIndX);
+    INSTR(0x04, dop);
     INSTR(0x05, oraZero);
     INSTR(0x06, aslZero);
     INSTR(0x08, php);
@@ -113,10 +104,12 @@ void Cpu::buildInstructionTable()
     INSTR(0x0e, aslAbs);
     INSTR(0x10, bpl);
     INSTR(0x11, oraIndY);
+    INSTR(0x14, dop);
     INSTR(0x15, oraZeroX);
     INSTR(0x16, aslZeroX);
     INSTR(0x18, clc);
     INSTR(0x19, oraAbsY);
+    INSTR(0x1a, nop);
     INSTR(0x1d, oraAbsX);
     INSTR(0x1e, aslAbsX);
     INSTR(0x20, jsrAbs);
@@ -132,14 +125,17 @@ void Cpu::buildInstructionTable()
     INSTR(0x2e, rolAbs);
     INSTR(0x30, bmi);
     INSTR(0x31, andIndY);
+    INSTR(0x34, dop);
     INSTR(0x35, andZeroX);
     INSTR(0x36, rolZeroX);
     INSTR(0x38, sec);
     INSTR(0x39, andAbsY);
+    INSTR(0x3a, nop);
     INSTR(0x3d, andAbsX);
     INSTR(0x3e, rolAbsX);
     INSTR(0x40, rti);
     INSTR(0x41, eorIndX);
+    INSTR(0x44, dop);
     INSTR(0x45, eorZero);
     INSTR(0x46, lsrZero);
     INSTR(0x48, pha);
@@ -150,13 +146,17 @@ void Cpu::buildInstructionTable()
     INSTR(0x4e, lsrAbs);
     INSTR(0x50, bvc);
     INSTR(0x51, eorIndY);
+    INSTR(0x54, dop);
     INSTR(0x55, eorZeroX);
     INSTR(0x56, lsrZeroX);
+    INSTR(0x58, cli);
     INSTR(0x59, eorAbsY);
+    INSTR(0x5a, nop);
     INSTR(0x5d, eorAbsX);
     INSTR(0x5e, lsrAbsX);
     INSTR(0x60, rts);
     INSTR(0x61, adcIndX);
+    INSTR(0x64, dop);
     INSTR(0x65, adcZero);
     INSTR(0x66, rorZero);
     INSTR(0x68, pla);
@@ -167,17 +167,22 @@ void Cpu::buildInstructionTable()
     INSTR(0x6e, rorAbs);
     INSTR(0x70, bvs);
     INSTR(0x71, adcIndY);
+    INSTR(0x74, dop);
     INSTR(0x75, adcZeroX);
     INSTR(0x76, rorZeroX);
     INSTR(0x78, sei);
     INSTR(0x79, adcAbsY);
+    INSTR(0x7a, nop);
     INSTR(0x7d, adcAbsX);
     INSTR(0x7e, rorAbsX);
+    INSTR(0x80, dop);
     INSTR(0x81, staIndX);
+    INSTR(0x82, dop);
     INSTR(0x84, styZero);
     INSTR(0x85, staZero);
     INSTR(0x86, stxZero);
     INSTR(0x88, dey);
+    INSTR(0x89, dop);
     INSTR(0x8a, txa);
     INSTR(0x8c, styAbs);
     INSTR(0x8d, staAbs);
@@ -216,6 +221,7 @@ void Cpu::buildInstructionTable()
     INSTR(0xbe, ldxAbsY);
     INSTR(0xc0, cpyImm);
     INSTR(0xc1, cmpIndX);
+    INSTR(0xc2, dop);
     INSTR(0xc4, cpyZero);
     INSTR(0xc5, cmpZero);
     INSTR(0xc6, decZero);
@@ -227,29 +233,35 @@ void Cpu::buildInstructionTable()
     INSTR(0xce, decAbs);
     INSTR(0xd0, bne);
     INSTR(0xd1, cmpIndY);
+    INSTR(0xd4, dop);
     INSTR(0xd5, cmpZeroX);
     INSTR(0xd6, decZeroX);
     INSTR(0xd8, cld);
     INSTR(0xd9, cmpAbsY);
+    INSTR(0xda, nop);
     INSTR(0xdd, cmpAbsX);
     INSTR(0xde, decAbsX);
     INSTR(0xe0, cpxImm);
     INSTR(0xe1, sbcIndX);
+    INSTR(0xe2, dop);
     INSTR(0xe4, cpxZero);
     INSTR(0xe5, sbcZero);
     INSTR(0xe6, incZero);
     INSTR(0xe8, inx);
     INSTR(0xe9, sbcImm);
     INSTR(0xea, nop);
+    INSTR(0xeb, sbcImm); // same as $e9
     INSTR(0xec, cpxAbs);
     INSTR(0xed, sbcAbs);
     INSTR(0xee, incAbs);
     INSTR(0xf0, beq);
     INSTR(0xf1, sbcIndY);
+    INSTR(0xf4, dop);
     INSTR(0xf5, sbcZeroX);
     INSTR(0xf6, incZeroX);
     INSTR(0xf8, sed);
     INSTR(0xf9, sbcAbsY);
+    INSTR(0xfa, nop);
     INSTR(0xfd, sbcAbsX);
     INSTR(0xfe, incAbsX);
 
@@ -287,6 +299,24 @@ uint8_t Cpu::pop8()
 {
     ++m_SP;
     return m_memory.read(0x100 /* stack prefix */ + m_SP);
+}
+
+// =====================================================================================================================
+void Cpu::performInterrupt(uint16_t vectorBase)
+{
+    m_inInterrupt = true;
+
+    // save the current PC
+    push8(m_PC >> 8);
+    push8(m_PC & 0xff);
+    // save the status
+    push8(m_status);
+
+    // disable interrupts
+    m_status |= IntDisable;
+
+    // read the NMI vector
+    m_PC = (m_memory.read(vectorBase + 1) << 8) | m_memory.read(vectorBase);
 }
 
 // =====================================================================================================================
@@ -452,6 +482,23 @@ void Cpu::nop()
 }
 
 // =====================================================================================================================
+void Cpu::dop()
+{
+    traceInstruction("DOP");
+    read8();
+}
+
+// =====================================================================================================================
+void Cpu::brk()
+{
+    traceInstruction("BRK");
+
+    m_status |= Break;
+    ++m_PC;
+    performInterrupt(0xfffe);
+}
+
+// =====================================================================================================================
 void Cpu::txa()
 {
     traceInstruction("TXA");
@@ -527,7 +574,7 @@ void Cpu::dey()
 void Cpu::bitZero()
 {
     uint16_t addr = addrZero();
-    traceInstruction(MakeString() << "BIT $" << std::hex << std::setw(4) << std::setfill('0') << addr);
+    traceInstruction(MakeString() << "BIT $" << std::hex << std::setw(2) << std::setfill('0') << addr);
 
     uint8_t data = m_memory.read(addr);
     setOrClearStatus(Sign, ((data >> 7) & 1) == 1);

@@ -11,7 +11,7 @@ using lib6502::Cpu;
 void Cpu::stxZero()
 {
     uint16_t addr = addrZero();
-    traceInstruction(MakeString() << "STX $" << std::hex << std::setw(2) << std::setfill('0') << addr);
+    traceInstruction(MakeString(true) << "STX $" << std::setw(2) << std::setfill('0') << addr);
     m_memory.write(addr, m_X);
 }
 
@@ -28,6 +28,6 @@ void Cpu::stxZeroY()
 void Cpu::stxAbs()
 {
     uint16_t addr = addrAbsolute();
-    traceInstruction(MakeString() << "STX $" << std::hex << std::setw(4) << std::setfill('0') << addr);
+    traceInstruction(MakeString(true) << "STX $" << std::setw(4) << std::setfill('0') << addr);
     m_memory.write(addr, m_X);
 }

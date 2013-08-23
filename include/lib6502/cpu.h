@@ -94,6 +94,8 @@ class Cpu
 	// pops a byte from the stack
 	uint8_t pop8();
 
+	void performInterrupt(uint16_t vectorBase);
+
 	// addressing helpers
 	uint8_t addrZero();
 	uint8_t addrZeroX(uint8_t& offset);
@@ -124,9 +126,13 @@ class Cpu
 	void jsrAbs();
 	void rts();
 	void rti();
+	void brk();
+
 	void nop();
+	void dop();
 
 	void sei();
+	void cli();
 	void sed();
 	void cld();
 	void sec();

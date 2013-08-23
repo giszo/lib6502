@@ -11,10 +11,11 @@ using lib6502::Cpu;
 void Cpu::andImm()
 {
     uint8_t imm = read8();
+    traceInstruction(MakeString(true) << "AND #$" << std::setw(2) << std::setfill('0') << (int)imm);
+
     m_A &= imm;
     updateZero(m_A);
     updateSign(m_A);
-    traceInstruction(MakeString() << "AND #$" << std::hex << std::setw(2) << std::setfill('0') << (int)imm);
 }
 
 // =====================================================================================================================
