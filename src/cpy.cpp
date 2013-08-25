@@ -7,6 +7,8 @@
 
 using lib6502::Cpu;
 
+static const unsigned s_cpyTicks[Cpu::NumOfAddrModes] = {2, 3, 0, 0, 4, 0, 0, 0, 0};
+
 // =====================================================================================================================
 unsigned Cpu::cpyImm(uint8_t opCode)
 {
@@ -17,14 +19,15 @@ unsigned Cpu::cpyImm(uint8_t opCode)
     setOrClearStatus(Zero, m_Y == imm);
     setOrClearStatus(Sign, (m_Y - imm) & 0x80);
 
-    return 2;
+    return s_cpyTicks[Immediate];
 }
 
 // =====================================================================================================================
 unsigned Cpu::cpyAddr(uint8_t opCode)
 {
+    auto addrMode = getAddressingMode(opCode);
     std::string addrTrace;
-    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
     traceInstruction("CPY", addrTrace);
 
@@ -33,6 +36,5 @@ unsigned Cpu::cpyAddr(uint8_t opCode)
     setOrClearStatus(Zero, m_Y == imm);
     setOrClearStatus(Sign, (m_Y - imm) & 0x80);
 
-    // TODO
-    return 3;
+    return s_cpyTicks[addrMode];
 }

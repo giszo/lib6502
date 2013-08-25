@@ -7,6 +7,8 @@
 
 using lib6502::Cpu;
 
+static const unsigned s_adcTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 4, 4, 4, 6, 5};
+
 // =====================================================================================================================
 unsigned Cpu::adcImm(uint8_t opCode)
 {
@@ -21,14 +23,15 @@ unsigned Cpu::adcImm(uint8_t opCode)
     setOrClearStatus(Carry, result > 255);
     setOrClearStatus(Overflow, (origA ^ m_A) & (imm ^ m_A) & 0x80);
 
-    return 2;
+    return s_adcTicks[Immediate];
 }
 
 // =====================================================================================================================
 unsigned Cpu::adcAddr(uint8_t opCode)
 {
+    auto addrMode = getAddressingMode(opCode);
     std::string addrTrace;
-    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
     traceInstruction("ADC", addrTrace);
 
@@ -41,6 +44,5 @@ unsigned Cpu::adcAddr(uint8_t opCode)
     setOrClearStatus(Carry, result > 255);
     setOrClearStatus(Overflow, (origA ^ m_A) & (imm ^ m_A) & 0x80);
 
-    // TODO
-    return 3;
+    return s_adcTicks[addrMode];
 }

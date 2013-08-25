@@ -7,6 +7,8 @@
 
 using lib6502::Cpu;
 
+static const unsigned s_aslTicks[Cpu::NumOfAddrModes] = {0, 5, 6, 0, 6, 7, 0, 0, 0};
+
 // =====================================================================================================================
 unsigned Cpu::aslAcc(uint8_t opCode)
 {
@@ -24,8 +26,9 @@ unsigned Cpu::aslAcc(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::aslAddr(uint8_t opCode)
 {
+    auto addrMode = getAddressingMode(opCode);
     std::string addrTrace;
-    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
     traceInstruction("ASL", addrTrace);
 
@@ -37,6 +40,5 @@ unsigned Cpu::aslAddr(uint8_t opCode)
     updateSign(data);
     m_memory.write(address, data);
 
-    // TODO
-    return 3;
+    return s_aslTicks[addrMode];
 }

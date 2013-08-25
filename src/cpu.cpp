@@ -22,7 +22,8 @@ Cpu::State::State()
 // =====================================================================================================================
 Cpu::Cpu(Memory& memory)
     : m_memory(memory),
-      m_instrTracer(NULL)
+      m_instrTracer(NULL),
+      m_remainingTicks(0)
 {
     // build the instruction handler table
     buildInstructionTable();
@@ -52,6 +53,12 @@ void Cpu::setInstructionTracer(InstructionTracer* t)
 // =====================================================================================================================
 void Cpu::tick()
 {
+    if (m_remainingTicks > 0)
+    {
+	--m_remainingTicks;
+	return;
+    }
+
     // save the state of the CPU for tracing
     m_instrState = m_state;
 
@@ -62,7 +69,12 @@ void Cpu::tick()
 	throw CpuException(MakeString() << "invalid opcode: " << std::hex << std::setw(2) << std::setfill('0') << (int)opCode);
 
     // perform the instruction
-    instr(opCode);
+    unsigned ticks = instr(opCode);
+
+    if (ticks == 0)
+	throw CpuException(MakeString() << "instruction with 0 ticks?");
+
+    m_remainingTicks = ticks - 1;
 }
 
 // =====================================================================================================================

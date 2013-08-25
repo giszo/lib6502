@@ -7,10 +7,13 @@
 
 using lib6502::Cpu;
 
+static const unsigned s_stxTicks[Cpu::NumOfAddrModes] = {0, 3, 0, 4, 4, 0, 0, 0, 0};
+
 // =====================================================================================================================
 unsigned Cpu::stx(uint8_t opCode)
 {
     std::string addrTrace;
+
     auto addrMode = getAddressingMode(opCode);
     if (addrMode == ZeroPageX) addrMode = ZeroPageY;
     else if (addrMode == AbsoluteX) addrMode = AbsoluteY;
@@ -20,6 +23,5 @@ unsigned Cpu::stx(uint8_t opCode)
 
     m_memory.write(address, m_X);
 
-    // TODO
-    return 3;
+    return s_stxTicks[addrMode];
 }

@@ -17,25 +17,27 @@ using lib6502::Cpu;
     setOrClearStatus(Carry, result < 0x100); \
     setOrClearStatus(Overflow, (origA ^ _imm) & (origA ^ m_A) & 0x80);
 
+static const unsigned s_sbcTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 4, 4, 4, 6, 5};
+
 // =====================================================================================================================
 unsigned Cpu::sbcImm(uint8_t addr)
 {
     uint8_t imm = read8();
     traceInstruction("SBC", MakeString(true) << " #$" << std::setw(2) << std::setfill('0') << (int)imm);
     SBC_CORE(imm);
-    return 2;
+    return s_sbcTicks[Immediate];
 }
 
 // =====================================================================================================================
 unsigned Cpu::sbcAddr(uint8_t opCode)
 {
+    auto addrMode = getAddressingMode(opCode);
     std::string addrTrace;
-    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
     traceInstruction("SBC", addrTrace);
 
     SBC_CORE(m_memory.read(address));
 
-    // TODO
-    return 3;
+    return s_sbcTicks[addrMode];
 }

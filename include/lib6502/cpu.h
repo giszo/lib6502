@@ -59,6 +59,22 @@ class Cpu
 	    Sign       = 0x80
 	};
 
+	// possible addressing modes
+	enum AddressingMode
+	{
+	    Immediate,
+	    ZeroPage,
+	    ZeroPageX,
+	    ZeroPageY,
+	    Absolute,
+	    AbsoluteX,
+	    AbsoluteY,
+	    IndirectX,
+	    IndirectY
+	};
+
+	static const unsigned NumOfAddrModes = IndirectY + 1;
+
 	Cpu(Memory& memory);
 
 	bool isInInterrupt() const;
@@ -96,21 +112,6 @@ class Cpu
 	uint8_t pop8();
 
 	void performInterrupt(uint16_t vectorBase);
-
-	// addressing helpers
-
-	enum AddressingMode
-	{
-	    Immediate,
-	    ZeroPage,
-	    ZeroPageX,
-	    ZeroPageY,
-	    Absolute,
-	    AbsoluteX,
-	    AbsoluteY,
-	    IndirectX,
-	    IndirectY
-	};
 
 	// returns the addressing mode of the given instruction
 	AddressingMode getAddressingMode(uint8_t opCode);
@@ -244,6 +245,9 @@ class Cpu
 	TAddressingMode m_addrModeTable[9];
 
 	InstructionTracer* m_instrTracer;
+
+	// remaining ticks of the current instruction before going to the next one
+	unsigned m_remainingTicks;
 };
 
 class InstructionTracer

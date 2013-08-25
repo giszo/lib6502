@@ -7,6 +7,8 @@
 
 using lib6502::Cpu;
 
+static const unsigned s_ldxTicks[Cpu::NumOfAddrModes] = {2, 3, 0, 4, 4, 0, 4, 0, 0};
+
 // =====================================================================================================================
 unsigned Cpu::ldxImm(uint8_t opCode)
 {
@@ -16,13 +18,14 @@ unsigned Cpu::ldxImm(uint8_t opCode)
     updateZero(m_X);
     updateSign(m_X);
 
-    return 2;
+    return s_ldxTicks[Immediate];
 }
 
 // =====================================================================================================================
 unsigned Cpu::ldxAddr(uint8_t opCode)
 {
     std::string addrTrace;
+
     auto addrMode = getAddressingMode(opCode);
     if (addrMode == ZeroPageX) addrMode = ZeroPageY;
     else if (addrMode == AbsoluteX) addrMode = AbsoluteY;
@@ -34,6 +37,5 @@ unsigned Cpu::ldxAddr(uint8_t opCode)
     updateZero(m_X);
     updateSign(m_X);
 
-    // TODO
-    return 3;
+    return s_ldxTicks[addrMode];
 }

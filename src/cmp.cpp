@@ -7,6 +7,8 @@
 
 using lib6502::Cpu;
 
+static const unsigned s_cmpTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 4, 4, 4, 6, 5};
+
 // =====================================================================================================================
 unsigned Cpu::cmpImm(uint8_t opCode)
 {
@@ -17,14 +19,15 @@ unsigned Cpu::cmpImm(uint8_t opCode)
     setOrClearStatus(Zero, m_A == imm);
     setOrClearStatus(Sign, (m_A - imm) & 0x80);
 
-    return 2;
+    return s_cmpTicks[Immediate];
 }
 
 // =====================================================================================================================
 unsigned Cpu::cmpAddr(uint8_t opCode)
 {
+    auto addrMode = getAddressingMode(opCode);
     std::string addrTrace;
-    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
     traceInstruction("CMP", addrTrace);
 
@@ -33,6 +36,5 @@ unsigned Cpu::cmpAddr(uint8_t opCode)
     setOrClearStatus(Zero, m_A == imm);
     setOrClearStatus(Sign, (m_A - imm) & 0x80);
 
-    // TODO
-    return 3;
+    return s_cmpTicks[addrMode];
 }

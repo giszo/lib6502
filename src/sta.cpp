@@ -7,16 +7,18 @@
 
 using lib6502::Cpu;
 
+static const unsigned s_staTicks[Cpu::NumOfAddrModes] = {0, 3, 4, 0, 4, 5, 5, 6, 6};
+
 // =====================================================================================================================
 unsigned Cpu::sta(uint8_t opCode)
 {
+    auto addrMode = getAddressingMode(opCode);
     std::string addrTrace;
-    uint16_t address = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
+    uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
     traceInstruction("STA", addrTrace);
 
     m_memory.write(address, m_A);
 
-    // TODO
-    return 3;
+    return s_staTicks[addrMode];
 }
