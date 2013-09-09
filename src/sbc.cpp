@@ -17,7 +17,7 @@ using lib6502::Cpu;
     setOrClearStatus(Carry, result < 0x100); \
     setOrClearStatus(Overflow, (origA ^ _imm) & (origA ^ m_A) & 0x80);
 
-static const unsigned s_sbcTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 4, 4, 4, 6, 5};
+static const unsigned s_sbcTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 0, 4, 4, 4, 6, 5};
 
 // =====================================================================================================================
 unsigned Cpu::sbcImm(uint8_t addr)

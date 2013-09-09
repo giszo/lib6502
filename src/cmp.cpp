@@ -7,7 +7,7 @@
 
 using lib6502::Cpu;
 
-static const unsigned s_cmpTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 4, 4, 4, 6, 5};
+static const unsigned s_cmpTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 0, 4, 4, 4, 6, 5};
 
 // =====================================================================================================================
 unsigned Cpu::cmpImm(uint8_t opCode)
