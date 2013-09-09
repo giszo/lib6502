@@ -16,7 +16,10 @@ unsigned Cpu::sty(uint8_t opCode)
     std::string addrTrace;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("STY", addrTrace);
+#endif
+
     m_memory.write(address, m_Y);
 
     return s_styTicks[addrMode];

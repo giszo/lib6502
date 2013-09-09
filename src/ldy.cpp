@@ -13,7 +13,10 @@ static const unsigned s_ldyTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 0, 4, 4, 0, 0,
 unsigned Cpu::ldyImm(uint8_t opCode)
 {
     m_Y = read8();
+
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("LDY", MakeString(true) << "#$" << std::setw(2) << std::setfill('0') << (int)m_Y);
+#endif
 
     updateZero(m_Y);
     updateSign(m_Y);
@@ -28,7 +31,9 @@ unsigned Cpu::ldyAddr(uint8_t opCode)
     std::string addrTrace;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("LDY", addrTrace);
+#endif
 
     m_Y = m_memory.read(address);
     updateZero(m_Y);

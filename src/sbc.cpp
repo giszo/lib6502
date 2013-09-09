@@ -23,7 +23,11 @@ static const unsigned s_sbcTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 0, 4, 4, 4, 6,
 unsigned Cpu::sbcImm(uint8_t addr)
 {
     uint8_t imm = read8();
+
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("SBC", MakeString(true) << " #$" << std::setw(2) << std::setfill('0') << (int)imm);
+#endif
+
     SBC_CORE(imm);
     return s_sbcTicks[Immediate];
 }
@@ -35,7 +39,9 @@ unsigned Cpu::sbcAddr(uint8_t opCode)
     std::string addrTrace;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("SBC", addrTrace);
+#endif
 
     SBC_CORE(m_memory.read(address));
 

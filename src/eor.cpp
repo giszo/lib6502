@@ -13,7 +13,10 @@ static const unsigned s_eorTicks[Cpu::NumOfAddrModes] = {2, 3, 4, 0, 4, 4, 4, 6,
 unsigned Cpu::eorImm(uint8_t opCode)
 {
     uint8_t imm = read8();
+
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("EOR", MakeString(true) << " #$" << std::setw(2) << std::setfill('0') << (int)imm);
+#endif
 
     m_A ^= imm;
     updateZero(m_A);
@@ -29,7 +32,9 @@ unsigned Cpu::eorAddr(uint8_t opCode)
     std::string addrTrace;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("EOR", addrTrace);
+#endif
 
     m_A ^= m_memory.read(address);
     updateZero(m_A);

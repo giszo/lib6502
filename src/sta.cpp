@@ -16,7 +16,9 @@ unsigned Cpu::sta(uint8_t opCode)
     std::string addrTrace;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("STA", addrTrace);
+#endif
 
     m_memory.write(address, m_A);
 

@@ -16,7 +16,9 @@ unsigned Cpu::inc(uint8_t opCode)
     std::string addrTrace;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("INC", addrTrace);
+#endif
 
     uint8_t data = m_memory.read(address);
     ++data;

@@ -12,7 +12,9 @@ static const unsigned s_rolTicks[Cpu::NumOfAddrModes] = {0, 5, 6, 0, 6, 7, 0, 0,
 // =====================================================================================================================
 unsigned Cpu::rolAcc(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("ROL", "A");
+#endif
 
     // bit #0 is shifted into carry
     bool setCarry = m_A & 0x80;
@@ -33,7 +35,9 @@ unsigned Cpu::rolAddr(uint8_t opCode)
     std::string addrTrace;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("ROL", addrTrace);
+#endif
 
     uint8_t data = m_memory.read(address);
     // bit #0 is shifted into carry

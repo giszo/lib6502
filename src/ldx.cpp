@@ -13,7 +13,10 @@ static const unsigned s_ldxTicks[Cpu::NumOfAddrModes] = {2, 3, 0, 4, 4, 0, 4, 0,
 unsigned Cpu::ldxImm(uint8_t opCode)
 {
     m_X = read8();
+
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("LDX", MakeString(true) << "#$" << std::setw(2) << std::setfill('0') << (int)m_X);
+#endif
 
     updateZero(m_X);
     updateSign(m_X);
@@ -31,7 +34,9 @@ unsigned Cpu::ldxAddr(uint8_t opCode)
     else if (addrMode == AbsoluteX) addrMode = AbsoluteY;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("LDX", addrTrace);
+#endif
 
     m_X = m_memory.read(address);
     updateZero(m_X);

@@ -98,7 +98,9 @@ class Cpu
     private:
 	void buildAddressingModeTable();
 
+#ifdef HAVE_INSTRUCTION_TRACE
 	void traceInstruction(const std::string& instr, const std::string& param = "");
+#endif
 
 	// reads a byte from the memory pointed by the PC and increments the PC
 	uint8_t read8();

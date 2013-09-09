@@ -19,7 +19,9 @@ unsigned Cpu::stx(uint8_t opCode)
     else if (addrMode == AbsoluteX) addrMode = AbsoluteY;
     uint16_t address = m_addrModeTable[addrMode](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("STX", addrTrace);
+#endif
 
     m_memory.write(address, m_X);
 

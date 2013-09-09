@@ -283,6 +283,7 @@ void Cpu::buildAddressingModeTable()
     m_addrModeTable[IndirectY] = std::bind(&Cpu::addrIndirectY, this, std::placeholders::_1);
 }
 
+#ifdef HAVE_INSTRUCTION_TRACE
 // =====================================================================================================================
 void Cpu::traceInstruction(const std::string& instr, const std::string& param)
 {
@@ -299,6 +300,7 @@ void Cpu::traceInstruction(const std::string& instr, const std::string& param)
 	m_instrTracer->trace(m_instrState, trace);
     }
 }
+#endif
 
 // =====================================================================================================================
 uint8_t Cpu::read8()
@@ -401,7 +403,9 @@ Cpu::AddressingMode Cpu::getAddressingMode(uint8_t opCode)
 uint16_t Cpu::addrZero(std::string& trace)
 {
     uint8_t addr = read8();
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << (int)addr;
+#endif
     return addr;
 }
 
@@ -409,7 +413,9 @@ uint16_t Cpu::addrZero(std::string& trace)
 uint16_t Cpu::addrZeroX(std::string& trace)
 {
     uint8_t addr = read8();
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << (int)addr << ",X";
+#endif
     return (addr + m_X) & 0xff;
 }
 
@@ -417,7 +423,9 @@ uint16_t Cpu::addrZeroX(std::string& trace)
 uint16_t Cpu::addrZeroY(std::string& trace)
 {
     uint8_t addr = read8();
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "$" << std::setw(2) << std::setfill('0') << (int)addr << ",Y";
+#endif
     return (addr + m_Y) & 0xff;
 }
 
@@ -425,7 +433,9 @@ uint16_t Cpu::addrZeroY(std::string& trace)
 uint16_t Cpu::addrAbsolute(std::string& trace)
 {
     uint16_t addr = read16();
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "$" << std::setw(4) << std::setfill('0') << addr;
+#endif
     return addr;
 }
 
@@ -433,7 +443,9 @@ uint16_t Cpu::addrAbsolute(std::string& trace)
 uint16_t Cpu::addrAbsoluteX(std::string& trace)
 {
     uint16_t addr = read16();
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "$" << std::setw(4) << std::setfill('0') << addr << ",X";
+#endif
     return addr + m_X;
 }
 
@@ -441,7 +453,9 @@ uint16_t Cpu::addrAbsoluteX(std::string& trace)
 uint16_t Cpu::addrAbsoluteY(std::string& trace)
 {
     uint16_t addr = read16();
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "$" << std::setw(4) << std::setfill('0') << addr << ",Y";
+#endif
     return addr + m_Y;
 }
 
@@ -449,7 +463,10 @@ uint16_t Cpu::addrAbsoluteY(std::string& trace)
 uint16_t Cpu::addrIndirectX(std::string& trace)
 {
     uint8_t off = read8();
+
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "($" << std::setw(2) << std::setfill('0') << (int)off << ",X)";
+#endif
 
     uint16_t addr;
     off += m_X;
@@ -464,7 +481,10 @@ uint16_t Cpu::addrIndirectX(std::string& trace)
 uint16_t Cpu::addrIndirectY(std::string& trace)
 {
     uint8_t off = read8();
+
+#ifdef HAVE_INSTRUCTION_TRACE
     trace = MakeString(true) << "$(" << std::setw(2) << std::setfill('0') << (int)off << "),Y";
+#endif
 
     uint16_t addr;
     addr = m_memory.read(off);
@@ -500,7 +520,9 @@ unsigned Cpu::jmpAbs(uint8_t opCode)
 {
     std::string addrTrace;
     m_PC = addrAbsolute(addrTrace);
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("JMP", addrTrace);
+#endif
     return 3;
 }
 
@@ -508,7 +530,10 @@ unsigned Cpu::jmpAbs(uint8_t opCode)
 unsigned Cpu::jmpInd(uint8_t opCode)
 {
     uint16_t addr = read16();
+
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("JMP", MakeString(true) << "($" << std::setw(4) << std::setfill('0') << addr << ")");
+#endif
 
     // implement the buggy way how indirect jump works in the 6502, lol :-]
     uint16_t addr2 = addr + 1;
@@ -525,7 +550,10 @@ unsigned Cpu::jsrAbs(uint8_t opCode)
 {
     std::string addrTrace;
     uint16_t addr = addrAbsolute(addrTrace);
+
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("JSR", addrTrace);
+#endif
 
     // push the old PC-1 to the stack
     uint16_t pc = m_PC - 1;
@@ -542,7 +570,9 @@ unsigned Cpu::jsrAbs(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::rts(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("RTS");
+#endif
 
     uint16_t pc = pop8() | (pop8() << 8);
     m_PC = pc + 1;
@@ -553,7 +583,9 @@ unsigned Cpu::rts(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::rti(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("RTI");
+#endif
 
     // do some sanity checking
     //if (!m_inInterrupt)
@@ -576,14 +608,18 @@ unsigned Cpu::rti(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::nop(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("NOP");
+#endif
     return 2;
 }
 
 // =====================================================================================================================
 unsigned Cpu::dop(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("DOP");
+#endif
     read8();
     // TODO: calculate this properly!
     return 2;
@@ -592,7 +628,9 @@ unsigned Cpu::dop(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::brk(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("BRK");
+#endif
 
     m_status |= Break;
     ++m_PC;
@@ -604,7 +642,9 @@ unsigned Cpu::brk(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::txa(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("TXA");
+#endif
     m_A = m_X;
     updateZero(m_A);
     updateSign(m_A);
@@ -614,7 +654,9 @@ unsigned Cpu::txa(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::tax(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("TAX");
+#endif
     m_X = m_A;
     updateZero(m_X);
     updateSign(m_X);
@@ -624,7 +666,9 @@ unsigned Cpu::tax(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::tya(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("TYA");
+#endif
     m_A = m_Y;
     updateZero(m_A);
     updateSign(m_A);
@@ -634,7 +678,9 @@ unsigned Cpu::tya(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::tay(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("TAY");
+#endif
     m_Y = m_A;
     updateZero(m_Y);
     updateSign(m_Y);
@@ -644,7 +690,9 @@ unsigned Cpu::tay(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::inx(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("INX");
+#endif
     ++m_X;
     updateZero(m_X);
     updateSign(m_X);
@@ -654,7 +702,9 @@ unsigned Cpu::inx(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::dex(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("DEX");
+#endif
     --m_X;
     updateZero(m_X);
     updateSign(m_X);
@@ -664,7 +714,9 @@ unsigned Cpu::dex(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::iny(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("INY");
+#endif
     ++m_Y;
     updateZero(m_Y);
     updateSign(m_Y);
@@ -674,7 +726,9 @@ unsigned Cpu::iny(uint8_t opCode)
 // =====================================================================================================================
 unsigned Cpu::dey(uint8_t opCode)
 {
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("DEY");
+#endif
     --m_Y;
     updateZero(m_Y);
     updateSign(m_Y);
@@ -687,7 +741,9 @@ unsigned Cpu::bit(uint8_t opCode)
     std::string addrTrace;
     uint16_t addr = m_addrModeTable[getAddressingMode(opCode)](addrTrace);
 
+#ifdef HAVE_INSTRUCTION_TRACE
     traceInstruction("BIT", addrTrace);
+#endif
 
     uint8_t data = m_memory.read(addr);
     setOrClearStatus(Sign, ((data >> 7) & 1) == 1);
