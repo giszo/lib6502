@@ -96,7 +96,6 @@ class Cpu
 	void nmi();
 
     private:
-	void buildInstructionTable();
 	void buildAddressingModeTable();
 
 	void traceInstruction(const std::string& instr, const std::string& param = "");
@@ -235,10 +234,6 @@ class Cpu
 	State m_instrState;
 	// reference to the memory used by the CPU
 	Memory& m_memory;
-
-	// instruction table
-	typedef std::function<unsigned (uint8_t)> TInstruction;
-	TInstruction m_instrTable[256];
 
 	// addressing mode table
 	typedef std::function<uint16_t(std::string&)> TAddressingMode;

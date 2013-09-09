@@ -25,8 +25,6 @@ Cpu::Cpu(Memory& memory)
       m_instrTracer(NULL),
       m_remainingTicks(0)
 {
-    // build the instruction handler table
-    buildInstructionTable();
     buildAddressingModeTable();
 
     reset();
@@ -53,6 +51,8 @@ void Cpu::setInstructionTracer(InstructionTracer* t)
 // =====================================================================================================================
 void Cpu::tick()
 {
+    unsigned ticks;
+
     if (m_remainingTicks > 0)
     {
 	--m_remainingTicks;
@@ -62,17 +62,195 @@ void Cpu::tick()
     // save the state of the CPU for tracing
     m_instrState = m_state;
 
+    // read the next opcode
     uint8_t opCode = read8();
-    auto instr = m_instrTable[opCode];
 
-    if (!instr)
-	throw CpuException(MakeString() << "invalid opcode: " << std::hex << std::setw(2) << std::setfill('0') << (int)opCode);
+    switch (opCode)
+    {
+#define INSTR(c, f) \
+	case c : ticks = f(opCode); break;
+	INSTR(0x00, brk);
+	INSTR(0x01, oraAddr);
+	INSTR(0x04, dop);
+	INSTR(0x05, oraAddr);
+	INSTR(0x06, aslAddr);
+	INSTR(0x08, php);
+	INSTR(0x09, oraImm);
+	INSTR(0x0a, aslAcc);
+	INSTR(0x0d, oraAddr);
+	INSTR(0x0e, aslAddr);
+	INSTR(0x10, bpl);
+	INSTR(0x11, oraAddr);
+	INSTR(0x14, dop);
+	INSTR(0x15, oraAddr);
+	INSTR(0x16, aslAddr);
+	INSTR(0x18, clc);
+	INSTR(0x19, oraAddr);
+	INSTR(0x1a, nop);
+	INSTR(0x1d, oraAddr);
+	INSTR(0x1e, aslAddr);
+	INSTR(0x20, jsrAbs);
+	INSTR(0x21, andAddr);
+	INSTR(0x24, bit);
+	INSTR(0x25, andAddr);
+	INSTR(0x26, rolAddr);
+	INSTR(0x28, plp);
+	INSTR(0x29, andImm);
+	INSTR(0x2a, rolAcc);
+	INSTR(0x2c, bit);
+	INSTR(0x2d, andAddr);
+	INSTR(0x2e, rolAddr);
+	INSTR(0x30, bmi);
+	INSTR(0x31, andAddr);
+	INSTR(0x34, dop);
+	INSTR(0x35, andAddr);
+	INSTR(0x36, rolAddr);
+	INSTR(0x38, sec);
+	INSTR(0x39, andAddr);
+	INSTR(0x3a, nop);
+	INSTR(0x3d, andAddr);
+	INSTR(0x3e, rolAddr);
+	INSTR(0x40, rti);
+	INSTR(0x41, eorAddr);
+	INSTR(0x44, dop);
+	INSTR(0x45, eorAddr);
+	INSTR(0x46, lsrAddr);
+	INSTR(0x48, pha);
+	INSTR(0x49, eorImm);
+	INSTR(0x4a, lsrAcc);
+	INSTR(0x4c, jmpAbs);
+	INSTR(0x4d, eorAddr);
+	INSTR(0x4e, lsrAddr);
+	INSTR(0x50, bvc);
+	INSTR(0x51, eorAddr);
+	INSTR(0x54, dop);
+	INSTR(0x55, eorAddr);
+	INSTR(0x56, lsrAddr);
+	INSTR(0x58, cli);
+	INSTR(0x59, eorAddr);
+	INSTR(0x5a, nop);
+	INSTR(0x5d, eorAddr);
+	INSTR(0x5e, lsrAddr);
+	INSTR(0x60, rts);
+	INSTR(0x61, adcAddr);
+	INSTR(0x64, dop);
+	INSTR(0x65, adcAddr);
+	INSTR(0x66, rorAddr);
+	INSTR(0x68, pla);
+	INSTR(0x69, adcImm);
+	INSTR(0x6a, rorAcc);
+	INSTR(0x6c, jmpInd);
+	INSTR(0x6d, adcAddr);
+	INSTR(0x6e, rorAddr);
+	INSTR(0x70, bvs);
+	INSTR(0x71, adcAddr);
+	INSTR(0x74, dop);
+	INSTR(0x75, adcAddr);
+	INSTR(0x76, rorAddr);
+	INSTR(0x78, sei);
+	INSTR(0x79, adcAddr);
+	INSTR(0x7a, nop);
+	INSTR(0x7d, adcAddr);
+	INSTR(0x7e, rorAddr);
+	INSTR(0x80, dop);
+	INSTR(0x81, sta);
+	INSTR(0x82, dop);
+	INSTR(0x84, sty);
+	INSTR(0x85, sta);
+	INSTR(0x86, stx);
+	INSTR(0x88, dey);
+	INSTR(0x89, dop);
+	INSTR(0x8a, txa);
+	INSTR(0x8c, sty);
+	INSTR(0x8d, sta);
+	INSTR(0x8e, stx);
+	INSTR(0x90, bcc);
+	INSTR(0x91, sta);
+	INSTR(0x94, sty);
+	INSTR(0x95, sta);
+	INSTR(0x96, stx);
+	INSTR(0x98, tya);
+	INSTR(0x99, sta);
+	INSTR(0x9a, txs);
+	INSTR(0x9d, sta);
+	INSTR(0xa0, ldyImm);
+	INSTR(0xa1, ldaAddr);
+	INSTR(0xa2, ldxImm);
+	INSTR(0xa4, ldyAddr);
+	INSTR(0xa5, ldaAddr);
+	INSTR(0xa6, ldxAddr);
+	INSTR(0xa8, tay);
+	INSTR(0xa9, ldaImm);
+	INSTR(0xaa, tax);
+	INSTR(0xac, ldyAddr);
+	INSTR(0xad, ldaAddr);
+	INSTR(0xae, ldxAddr);
+	INSTR(0xb0, bcs);
+	INSTR(0xb1, ldaAddr);
+	INSTR(0xb4, ldyAddr);
+	INSTR(0xb5, ldaAddr);
+	INSTR(0xb6, ldxAddr);
+	INSTR(0xb8, clv);
+	INSTR(0xb9, ldaAddr);
+	INSTR(0xba, tsx);
+	INSTR(0xbc, ldyAddr);
+	INSTR(0xbd, ldaAddr);
+	INSTR(0xbe, ldxAddr);
+	INSTR(0xc0, cpyImm);
+	INSTR(0xc1, cmpAddr);
+	INSTR(0xc2, dop);
+	INSTR(0xc4, cpyAddr);
+	INSTR(0xc5, cmpAddr);
+	INSTR(0xc6, dec);
+	INSTR(0xc8, iny);
+	INSTR(0xc9, cmpImm);
+	INSTR(0xca, dex);
+	INSTR(0xcc, cpyAddr);
+	INSTR(0xcd, cmpAddr);
+	INSTR(0xce, dec);
+	INSTR(0xd0, bne);
+	INSTR(0xd1, cmpAddr);
+	INSTR(0xd4, dop);
+	INSTR(0xd5, cmpAddr);
+	INSTR(0xd6, dec);
+	INSTR(0xd8, cld);
+	INSTR(0xd9, cmpAddr);
+	INSTR(0xda, nop);
+	INSTR(0xdd, cmpAddr);
+	INSTR(0xde, dec);
+	INSTR(0xe0, cpxImm);
+	INSTR(0xe1, sbcAddr);
+	INSTR(0xe2, dop);
+	INSTR(0xe4, cpxAddr);
+	INSTR(0xe5, sbcAddr);
+	INSTR(0xe6, inc);
+	INSTR(0xe8, inx);
+	INSTR(0xe9, sbcImm);
+	INSTR(0xea, nop);
+	INSTR(0xeb, sbcImm); // same as $e9
+	INSTR(0xec, cpxAddr);
+	INSTR(0xed, sbcAddr);
+	INSTR(0xee, inc);
+	INSTR(0xf0, beq);
+	INSTR(0xf1, sbcAddr);
+	INSTR(0xf4, dop);
+	INSTR(0xf5, sbcAddr);
+	INSTR(0xf6, inc);
+	INSTR(0xf8, sed);
+	INSTR(0xf9, sbcAddr);
+	INSTR(0xfa, nop);
+	INSTR(0xfd, sbcAddr);
+	INSTR(0xfe, inc);
+#undef INSTR
+	default :
+	    throw CpuException(MakeString(true) << "invalid opcode: " << std::setw(2) << std::setfill('0') << (unsigned)opCode);
+    }
 
     // perform the instruction
-    unsigned ticks = instr(opCode);
+    //unsigned ticks = instr(opCode);
 
     if (ticks == 0)
-	throw CpuException(MakeString() << "instruction with 0 ticks?");
+	throw CpuException(MakeString(true) << "instruction with 0 ticks? (opcode=" << (unsigned)opCode << ")");
 
     m_remainingTicks = ticks - 1;
 }
@@ -90,188 +268,6 @@ void Cpu::reset()
 void Cpu::nmi()
 {
     performInterrupt(0xfffa);
-}
-
-// =====================================================================================================================
-void Cpu::buildInstructionTable()
-{
-#define INSTR(code, func) \
-    m_instrTable[code] = std::bind(&Cpu::func, this, std::placeholders::_1)
-
-    INSTR(0x00, brk);
-    INSTR(0x01, oraAddr);
-    INSTR(0x04, dop);
-    INSTR(0x05, oraAddr);
-    INSTR(0x06, aslAddr);
-    INSTR(0x08, php);
-    INSTR(0x09, oraImm);
-    INSTR(0x0a, aslAcc);
-    INSTR(0x0d, oraAddr);
-    INSTR(0x0e, aslAddr);
-    INSTR(0x10, bpl);
-    INSTR(0x11, oraAddr);
-    INSTR(0x14, dop);
-    INSTR(0x15, oraAddr);
-    INSTR(0x16, aslAddr);
-    INSTR(0x18, clc);
-    INSTR(0x19, oraAddr);
-    INSTR(0x1a, nop);
-    INSTR(0x1d, oraAddr);
-    INSTR(0x1e, aslAddr);
-    INSTR(0x20, jsrAbs);
-    INSTR(0x21, andAddr);
-    INSTR(0x24, bit);
-    INSTR(0x25, andAddr);
-    INSTR(0x26, rolAddr);
-    INSTR(0x28, plp);
-    INSTR(0x29, andImm);
-    INSTR(0x2a, rolAcc);
-    INSTR(0x2c, bit);
-    INSTR(0x2d, andAddr);
-    INSTR(0x2e, rolAddr);
-    INSTR(0x30, bmi);
-    INSTR(0x31, andAddr);
-    INSTR(0x34, dop);
-    INSTR(0x35, andAddr);
-    INSTR(0x36, rolAddr);
-    INSTR(0x38, sec);
-    INSTR(0x39, andAddr);
-    INSTR(0x3a, nop);
-    INSTR(0x3d, andAddr);
-    INSTR(0x3e, rolAddr);
-    INSTR(0x40, rti);
-    INSTR(0x41, eorAddr);
-    INSTR(0x44, dop);
-    INSTR(0x45, eorAddr);
-    INSTR(0x46, lsrAddr);
-    INSTR(0x48, pha);
-    INSTR(0x49, eorImm);
-    INSTR(0x4a, lsrAcc);
-    INSTR(0x4c, jmpAbs);
-    INSTR(0x4d, eorAddr);
-    INSTR(0x4e, lsrAddr);
-    INSTR(0x50, bvc);
-    INSTR(0x51, eorAddr);
-    INSTR(0x54, dop);
-    INSTR(0x55, eorAddr);
-    INSTR(0x56, lsrAddr);
-    INSTR(0x58, cli);
-    INSTR(0x59, eorAddr);
-    INSTR(0x5a, nop);
-    INSTR(0x5d, eorAddr);
-    INSTR(0x5e, lsrAddr);
-    INSTR(0x60, rts);
-    INSTR(0x61, adcAddr);
-    INSTR(0x64, dop);
-    INSTR(0x65, adcAddr);
-    INSTR(0x66, rorAddr);
-    INSTR(0x68, pla);
-    INSTR(0x69, adcImm);
-    INSTR(0x6a, rorAcc);
-    INSTR(0x6c, jmpInd);
-    INSTR(0x6d, adcAddr);
-    INSTR(0x6e, rorAddr);
-    INSTR(0x70, bvs);
-    INSTR(0x71, adcAddr);
-    INSTR(0x74, dop);
-    INSTR(0x75, adcAddr);
-    INSTR(0x76, rorAddr);
-    INSTR(0x78, sei);
-    INSTR(0x79, adcAddr);
-    INSTR(0x7a, nop);
-    INSTR(0x7d, adcAddr);
-    INSTR(0x7e, rorAddr);
-    INSTR(0x80, dop);
-    INSTR(0x81, sta);
-    INSTR(0x82, dop);
-    INSTR(0x84, sty);
-    INSTR(0x85, sta);
-    INSTR(0x86, stx);
-    INSTR(0x88, dey);
-    INSTR(0x89, dop);
-    INSTR(0x8a, txa);
-    INSTR(0x8c, sty);
-    INSTR(0x8d, sta);
-    INSTR(0x8e, stx);
-    INSTR(0x90, bcc);
-    INSTR(0x91, sta);
-    INSTR(0x94, sty);
-    INSTR(0x95, sta);
-    INSTR(0x96, stx);
-    INSTR(0x98, tya);
-    INSTR(0x99, sta);
-    INSTR(0x9a, txs);
-    INSTR(0x9d, sta);
-    INSTR(0xa0, ldyImm);
-    INSTR(0xa1, ldaAddr);
-    INSTR(0xa2, ldxImm);
-    INSTR(0xa4, ldyAddr);
-    INSTR(0xa5, ldaAddr);
-    INSTR(0xa6, ldxAddr);
-    INSTR(0xa8, tay);
-    INSTR(0xa9, ldaImm);
-    INSTR(0xaa, tax);
-    INSTR(0xac, ldyAddr);
-    INSTR(0xad, ldaAddr);
-    INSTR(0xae, ldxAddr);
-    INSTR(0xb0, bcs);
-    INSTR(0xb1, ldaAddr);
-    INSTR(0xb4, ldyAddr);
-    INSTR(0xb5, ldaAddr);
-    INSTR(0xb6, ldxAddr);
-    INSTR(0xb8, clv);
-    INSTR(0xb9, ldaAddr);
-    INSTR(0xba, tsx);
-    INSTR(0xbc, ldyAddr);
-    INSTR(0xbd, ldaAddr);
-    INSTR(0xbe, ldxAddr);
-    INSTR(0xc0, cpyImm);
-    INSTR(0xc1, cmpAddr);
-    INSTR(0xc2, dop);
-    INSTR(0xc4, cpyAddr);
-    INSTR(0xc5, cmpAddr);
-    INSTR(0xc6, dec);
-    INSTR(0xc8, iny);
-    INSTR(0xc9, cmpImm);
-    INSTR(0xca, dex);
-    INSTR(0xcc, cpyAddr);
-    INSTR(0xcd, cmpAddr);
-    INSTR(0xce, dec);
-    INSTR(0xd0, bne);
-    INSTR(0xd1, cmpAddr);
-    INSTR(0xd4, dop);
-    INSTR(0xd5, cmpAddr);
-    INSTR(0xd6, dec);
-    INSTR(0xd8, cld);
-    INSTR(0xd9, cmpAddr);
-    INSTR(0xda, nop);
-    INSTR(0xdd, cmpAddr);
-    INSTR(0xde, dec);
-    INSTR(0xe0, cpxImm);
-    INSTR(0xe1, sbcAddr);
-    INSTR(0xe2, dop);
-    INSTR(0xe4, cpxAddr);
-    INSTR(0xe5, sbcAddr);
-    INSTR(0xe6, inc);
-    INSTR(0xe8, inx);
-    INSTR(0xe9, sbcImm);
-    INSTR(0xea, nop);
-    INSTR(0xeb, sbcImm); // same as $e9
-    INSTR(0xec, cpxAddr);
-    INSTR(0xed, sbcAddr);
-    INSTR(0xee, inc);
-    INSTR(0xf0, beq);
-    INSTR(0xf1, sbcAddr);
-    INSTR(0xf4, dop);
-    INSTR(0xf5, sbcAddr);
-    INSTR(0xf6, inc);
-    INSTR(0xf8, sed);
-    INSTR(0xf9, sbcAddr);
-    INSTR(0xfa, nop);
-    INSTR(0xfd, sbcAddr);
-    INSTR(0xfe, inc);
-
-#undef INSTR
 }
 
 // =====================================================================================================================
