@@ -83,7 +83,9 @@ class Cpu
 
 	State& getState();
 
+#ifdef HAVE_INSTRUCTION_TRACE
 	void setInstructionTracer(InstructionTracer* t);
+#endif
 
 	/**
 	 * Simulates one clock tick on the CPU.
@@ -234,8 +236,6 @@ class Cpu
     private:
 	// the actual state of the CPU
 	State m_state;
-	// the state of the CPU before executing the next instruction (used for tracing)
-	State m_instrState;
 	// reference to the memory used by the CPU
 	Memory& m_memory;
 
@@ -243,7 +243,12 @@ class Cpu
 	typedef std::function<uint16_t(std::string&)> TAddressingMode;
 	TAddressingMode m_addrModeTable[9];
 
+#ifdef HAVE_INSTRUCTION_TRACE
+	// the state of the CPU before executing the next instruction (used for tracing)
+	State m_instrState;
+
 	InstructionTracer* m_instrTracer;
+#endif
 
 	// remaining ticks of the current instruction before going to the next one
 	unsigned m_remainingTicks;

@@ -23,7 +23,9 @@ Cpu::State::State()
 // =====================================================================================================================
 Cpu::Cpu(Memory& memory)
     : m_memory(memory),
+#ifdef HAVE_INSTRUCTION_TRACE
       m_instrTracer(NULL),
+#endif
       m_remainingTicks(0)
 {
     buildAddressingModeTable();
@@ -44,12 +46,6 @@ Cpu::State& Cpu::getState()
 }
 
 // =====================================================================================================================
-void Cpu::setInstructionTracer(InstructionTracer* t)
-{
-    m_instrTracer = t;
-}
-
-// =====================================================================================================================
 void Cpu::tick()
 {
     unsigned ticks;
@@ -63,8 +59,10 @@ void Cpu::tick()
 	return;
     }
 
+#ifdef HAVE_INSTRUCTION_TRACE
     // save the state of the CPU for tracing
     m_instrState = m_state;
+#endif
 
     // read the next opcode
     uint8_t opCode = read8();
@@ -288,6 +286,12 @@ void Cpu::buildAddressingModeTable()
 }
 
 #ifdef HAVE_INSTRUCTION_TRACE
+// =====================================================================================================================
+void Cpu::setInstructionTracer(InstructionTracer* t)
+{
+    m_instrTracer = t;
+}
+
 // =====================================================================================================================
 void Cpu::traceInstruction(const std::string& instr, const std::string& param)
 {
