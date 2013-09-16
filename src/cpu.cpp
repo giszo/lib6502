@@ -13,7 +13,8 @@ Cpu::State::State()
       m_status(0),
       m_SP(0),
       m_PC(0),
-      m_inInterrupt(false)
+      m_inInterrupt(false),
+      m_ticks(0)
 {
 }
 
@@ -52,6 +53,9 @@ void Cpu::setInstructionTracer(InstructionTracer* t)
 void Cpu::tick()
 {
     unsigned ticks;
+
+    // increment internal tick counter
+    ++m_state.m_ticks;
 
     if (m_remainingTicks > 0)
     {
@@ -259,6 +263,9 @@ void Cpu::reset()
     m_SP = 0xfd;
     m_status = Always1 | IntDisable;
     m_inInterrupt = false;
+
+    // reset our internal tick counter
+    m_state.m_ticks = 0;
 }
 
 // =====================================================================================================================

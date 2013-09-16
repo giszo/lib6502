@@ -44,6 +44,8 @@ class Cpu
 	    uint8_t m_SP;
 	    uint16_t m_PC;
 	    bool m_inInterrupt;
+
+	    uint64_t m_ticks;
 	};
 
 	// masks for the available status bits
