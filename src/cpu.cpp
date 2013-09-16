@@ -246,9 +246,6 @@ void Cpu::tick()
 	    throw CpuException(MakeString(true) << "invalid opcode: " << std::setw(2) << std::setfill('0') << (unsigned)opCode);
     }
 
-    // perform the instruction
-    //unsigned ticks = instr(opCode);
-
     if (ticks == 0)
 	throw CpuException(MakeString(true) << "instruction with 0 ticks? (opcode=" << (unsigned)opCode << ")");
 
